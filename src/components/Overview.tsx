@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowRight, ArrowUpRight, CalendarClock, CheckCircle2, ChevronRight, Clock3, MailCheck, Plus, ShieldAlert, UsersRound } from "lucide-react";
+import { ArrowRight, CalendarClock, CheckCircle2, ChevronRight, Clock3, MailCheck, Plus, ShieldAlert, UsersRound } from "lucide-react";
 import type { DemoStore, Profile } from "@/domain/types";
 import { profileName } from "@/domain/types";
 import { Avatar } from "@/components/ui";
@@ -41,11 +41,12 @@ export function Overview({
   const needsAttention = clients.filter((profile) => NEEDS_REVIEW.has(profile.stage)).slice(0, 4);
   const sortedActivities = [...store.activities].sort((left, right) => right.createdAt.localeCompare(left.createdAt)).slice(0, 5);
   const ownerName = "Maya";
+  const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }).toUpperCase();
 
   return (
     <div className="page-stack overview-page">
       <section className="welcome-row">
-        <div><p className="eyebrow">TUESDAY, OCTOBER 13, 2026 <span className="eyebrow-divider">/</span> YOUR PRACTICE AT A GLANCE</p>
+        <div><p className="eyebrow">{today} <span className="eyebrow-divider">/</span> YOUR PRACTICE AT A GLANCE</p>
           <h1>Good morning, {ownerName}<span className="title-period">.</span></h1>
           <p className="welcome-subtitle">A little progress, one thoughtful introduction at a time.</p>
         </div>
@@ -53,10 +54,10 @@ export function Overview({
       </section>
 
       <section className="metric-grid" aria-label="Workspace metrics">
-        <MetricCard label="Assigned customers" value={clients.length} caption="Across your active pipeline" icon={<UsersRound size={17} />} trend="+2 this month" trendUp />
-        <MetricCard label="Profiles to review" value={awaitingReview.length} caption="Onboarding or incomplete" icon={<Clock3 size={17} />} trend={`${Math.min(awaitingReview.length, 3)} need a next step`} />
-        <MetricCard label="Shortlisted matches" value={shortlistedCount} caption="Saved for a closer look" icon={<CheckCircle2 size={17} />} trend="Across all customers" />
-        <MetricCard label="Introductions sent" value={store.introductions.length} caption="Mock introductions · demo" icon={<MailCheck size={17} />} trend="No email was sent" />
+        <MetricCard label="Assigned customers" value={clients.length} caption="Across your active pipeline" icon={<UsersRound size={17} />} status="Seeded sample records" />
+        <MetricCard label="Profiles to review" value={awaitingReview.length} caption="Onboarding or incomplete" icon={<Clock3 size={17} />} status={`${awaitingReview.length} need a next step`} />
+        <MetricCard label="Shortlisted matches" value={shortlistedCount} caption="Saved for a closer look" icon={<CheckCircle2 size={17} />} status="Across customer pairs" />
+        <MetricCard label="Introductions sent" value={store.introductions.length} caption="Mock introductions · demo" icon={<MailCheck size={17} />} status="No email was sent" />
       </section>
 
       <div className="overview-main-grid">
@@ -115,10 +116,10 @@ export function Overview({
   );
 }
 
-function MetricCard({ label, value, caption, icon, trend, trendUp }: { label: string; value: number; caption: string; icon: React.ReactNode; trend: string; trendUp?: boolean }) {
+function MetricCard({ label, value, caption, icon, status }: { label: string; value: number; caption: string; icon: React.ReactNode; status: string }) {
   return <article className="metric-card"><div className="metric-top"><span>{label}</span><span className="metric-icon">{icon}</span></div>
     <div className="metric-value">{value.toString().padStart(2, "0")}</div><p className="metric-caption">{caption}</p>
-    <div className="metric-trend">{trendUp ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}<span>{trend}</span></div>
+    <div className="metric-trend"><span className="tiny-dot" /><span>{status}</span></div>
   </article>;
 }
 
