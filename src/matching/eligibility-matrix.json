@@ -460,5 +460,16 @@
     "customerChanges": {
       "dateOfBirth": null
     }
+  },
+  {
+    "name": "a shared name with a different known birth date is not a duplicate",
+    "expected": true,
+    "sameName": true,
+    "customerChanges": {
+      "dateOfBirth": "1990-01-01"
+    },
+    "candidateChanges": {
+      "dateOfBirth": "1992-01-01"
+    }
   }
 ]
