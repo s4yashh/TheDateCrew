@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createSeedStore } from "@/data/seed";
 import { checkEligibility, rankMatches, scoreMatch } from "@/matching/scoring";
+import { getAge } from "@/domain/types";
 import type { Profile } from "@/domain/types";
 
 const seeded = createSeedStore();
@@ -66,6 +67,24 @@ describe("deterministic matching engine", () => {
     const demoResult = scoreMatch(heuristicClient, heuristicCandidate, { assessmentDemoMode: true });
     expect(demoResult.assessmentBonus).toBeGreaterThan(0);
     expect(demoResult.assessmentBonus).toBeLessThanOrEqual(6);
+    expect(demoResult.assessmentReasons.length).toBeGreaterThan(0);
+  });
+
+  it("only adds female-client demo emphasis when compatibility is present", () => {
+    const womanClient = { ...client, gender: "woman" as const, profession: "Product designer", values: ["Kindness", "Curiosity"], lifestyle: ["Non-smoker"], relocation: "Open to relocate" as const };
+    const manCandidate = { ...candidate, gender: "man" as const, profession: "Product designer", values: ["Kindness", "Curiosity"], lifestyle: ["Non-smoker"], relocation: "Open to relocate" as const };
+    const result = scoreMatch(womanClient, manCandidate, { assessmentDemoMode: true });
+    expect(result.assessmentBonus).toBeLessThanOrEqual(4);
+    expect(result.assessmentReasons.some((reason) => reason.includes("career-compatibility"))).toBe(true);
+    expect(result.assessmentReasons.some((reason) => reason.includes("shared-values"))).toBe(true);
+  });
+
+  it("handles missing, malformed, impossible, future, and valid dates of birth safely", () => {
+    expect(getAge(null)).toBeNull();
+    expect(getAge("not-a-date")).toBeNull();
+    expect(getAge("2000-02-31")).toBeNull();
+    expect(getAge("2099-01-01", new Date("2026-10-13T12:00:00.000Z"))).toBeNull();
+    expect(getAge("1990-10-13", new Date("2026-10-13T12:00:00.000Z"))).toBe(36);
   });
 
   it("ranks eligible candidates by score and excludes sent or dismissed pairs", () => {
