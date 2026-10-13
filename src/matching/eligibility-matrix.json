@@ -471,5 +471,10 @@
     "candidateChanges": {
       "dateOfBirth": "1992-01-01"
     }
+  },
+  {
+    "name": "dismissed pair is excluded from recommendations",
+    "expected": false,
+    "interactionStatus": "dismissed"
   }
 ]
