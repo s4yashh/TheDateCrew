@@ -452,5 +452,13 @@
     "name": "matching name and known birth date is treated as the same person",
     "expected": false,
     "samePerson": true
+  },
+  {
+    "name": "matching names with missing birth dates are not assumed to be the same person",
+    "expected": true,
+    "samePerson": true,
+    "customerChanges": {
+      "dateOfBirth": null
+    }
   }
 ]
