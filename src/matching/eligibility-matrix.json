@@ -398,5 +398,18 @@
     "candidateChanges": {
       "relocation": null
     }
+  },
+  {
+    "name": "candidate strict relocation is evaluated in reverse",
+    "expected": false,
+    "candidatePreferences": {
+      "relocation": "Not open to relocate",
+      "strict": [
+        "relocation"
+      ]
+    },
+    "customerChanges": {
+      "relocation": "Open to relocate"
+    }
   }
 ]
