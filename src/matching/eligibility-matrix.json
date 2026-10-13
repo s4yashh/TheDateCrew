@@ -54,5 +54,19 @@
     "candidateChanges": {
       "dateOfBirth": "1980-01-01"
     }
+  },
+  {
+    "name": "strict age keeps an unknown birth date eligible",
+    "expected": true,
+    "customerPreferences": {
+      "ageMin": 30,
+      "ageMax": 40,
+      "strict": [
+        "age"
+      ]
+    },
+    "candidateChanges": {
+      "dateOfBirth": null
+    }
   }
 ]
