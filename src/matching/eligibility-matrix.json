@@ -411,5 +411,12 @@
     "customerChanges": {
       "relocation": "Open to relocate"
     }
+  },
+  {
+    "name": "opposite-gender profiles are eligible when other rules pass",
+    "expected": true,
+    "customerPreferences": {
+      "strict": []
+    }
   }
 ]
