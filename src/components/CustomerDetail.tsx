@@ -66,6 +66,7 @@ export function CustomerDetail({ profile, store, onClose, onAction }: {
           <DetailField label="Gender" value={readable(profile.gender)} />
           <DetailField label="Height" value={profile.heightCm ? `${profile.heightCm} cm` : null} />
           <DetailField label="Country" value={profile.country} />
+          <DetailField label="State / region" value={profile.state} />
           <DetailField label="Languages" value={profile.languages.join(", ")} />
           <DetailField label="Email" value={profile.email} sensitive />
           <DetailField label="Phone" value={profile.phone} sensitive />
@@ -91,6 +92,8 @@ export function CustomerDetail({ profile, store, onClose, onAction }: {
           <DetailField label="Children preference" value={profile.childrenPreference} />
           <DetailField label="Relocation" value={profile.relocation} />
           <DetailField label="Pets" value={profile.petsPreference} />
+          <DetailField label="Smoking" value={profile.smokingPreference} />
+          <DetailField label="Drinking" value={profile.drinkingPreference} />
           <DetailField label="Timeline" value={profile.relationshipTimeline} />
           <DetailField label="Lifestyle" value={profile.lifestyle.join(", ")} />
           <DetailField label="Interests" value={profile.hobbies.join(", ")} />
@@ -98,6 +101,14 @@ export function CustomerDetail({ profile, store, onClose, onAction }: {
           <DetailField label="Profile prompt" value={profile.prompt} />
         </DetailSection>
       </div>
+
+      <section className="detail-block matchmaking-metadata"><div className="detail-block-heading"><span className="detail-section-icon"><ShieldCheck size={15} /></span><div><h3>Matchmaking record</h3><p>Internal stewardship and consent details.</p></div></div><div className="detail-fields">
+        <DetailField label="Verification status" value={profile.verification} />
+        <DetailField label="Verification method" value={profile.verificationMethod} />
+        <DetailField label="Profile consent" value={profile.consent} />
+        <DetailField label="Assigned matchmaker" value="Maya Shah" />
+        <DetailField label="Last activity" value={new Date(profile.lastActivityAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })} />
+      </div></section>
 
       <section className="detail-block preference-block"><div className="detail-block-heading"><span className="detail-section-icon"><Sparkles size={15} /></span><div><h3>Partner preferences</h3><p>Only preferences explicitly recorded on this fictional profile.</p></div></div>
         <div className="preference-grid">
