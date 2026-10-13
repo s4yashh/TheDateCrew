@@ -487,5 +487,11 @@
     "name": "sent pair is excluded from recommendations",
     "expected": false,
     "interactionStatus": "sent"
+  },
+  {
+    "name": "sent pair can be inspected in history",
+    "expected": true,
+    "interactionStatus": "sent",
+    "showPreviouslyContacted": true
   }
 ]
