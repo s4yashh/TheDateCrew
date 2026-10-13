@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarClock, CheckCircle2, ChevronRight, Clock3, MailCheck, Plus, ShieldAlert, UsersRound } from "lucide-react";
+import { ArrowDownRight, ArrowRight, CalendarClock, CheckCircle2, ChevronRight, Clock3, MailCheck, Plus, ShieldAlert, UsersRound } from "lucide-react";
 import type { DemoStore, Profile } from "@/domain/types";
 import { profileName } from "@/domain/types";
 import { Avatar } from "@/components/ui";
