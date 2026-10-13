@@ -8,6 +8,8 @@ function addActivity(store: DemoStore, event: Omit<ActivityEvent, "id" | "create
   store.activities.unshift({ ...event, id: randomUUID(), createdAt: new Date().toISOString() });
 }
 
+function requireProfiles(store: DemoStore, customerId: string): { customer: DemoStore["profiles"][number] };
+function requireProfiles(store: DemoStore, customerId: string, candidateId: string): { customer: DemoStore["profiles"][number]; candidate: DemoStore["profiles"][number] };
 function requireProfiles(store: DemoStore, customerId: string, candidateId?: string) {
   const customer = store.profiles.find((profile) => profile.id === customerId);
   if (!customer?.assigned) throw new Error("Customer not found in your assigned accounts.");
