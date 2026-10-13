@@ -511,5 +511,15 @@
     "candidateChanges": {
       "city": "Jaipur"
     }
+  },
+  {
+    "name": "strict city without selected cities has no hard constraint",
+    "expected": true,
+    "customerPreferences": {
+      "cities": [],
+      "strict": [
+        "city"
+      ]
+    }
   }
 ]
