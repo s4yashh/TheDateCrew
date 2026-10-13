@@ -296,5 +296,20 @@
     "candidateChanges": {
       "maritalStatus": "Never married"
     }
+  },
+  {
+    "name": "strict marital status keeps missing status eligible",
+    "expected": true,
+    "customerPreferences": {
+      "maritalStatuses": [
+        "Never married"
+      ],
+      "strict": [
+        "maritalStatus"
+      ]
+    },
+    "candidateChanges": {
+      "maritalStatus": null
+    }
   }
 ]
