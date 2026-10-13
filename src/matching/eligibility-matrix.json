@@ -12,5 +12,19 @@
     "candidateChanges": {
       "dateOfBirth": "2000-01-01"
     }
+  },
+  {
+    "name": "strict age accepts the inclusive minimum",
+    "expected": true,
+    "customerPreferences": {
+      "ageMin": 30,
+      "ageMax": 40,
+      "strict": [
+        "age"
+      ]
+    },
+    "candidateChanges": {
+      "dateOfBirth": "1996-10-13"
+    }
   }
 ]
