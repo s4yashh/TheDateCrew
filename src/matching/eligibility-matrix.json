@@ -102,5 +102,16 @@
     "candidateChanges": {
       "dateOfBirth": "1980-01-01"
     }
+  },
+  {
+    "name": "strict age without a recorded range has no hard constraint",
+    "expected": true,
+    "customerPreferences": {
+      "ageMin": null,
+      "ageMax": null,
+      "strict": [
+        "age"
+      ]
+    }
   }
 ]
