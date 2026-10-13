@@ -418,5 +418,15 @@
     "customerPreferences": {
       "strict": []
     }
+  },
+  {
+    "name": "same-gender profiles are not eligible in the assessment pool",
+    "expected": false,
+    "customerPreferences": {
+      "strict": []
+    },
+    "candidateChanges": {
+      "gender": "man"
+    }
   }
 ]
