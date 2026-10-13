@@ -183,5 +183,19 @@
     "candidateChanges": {
       "heightCm": null
     }
+  },
+  {
+    "name": "candidate strict height checks the customer profile",
+    "expected": false,
+    "candidatePreferences": {
+      "heightMinCm": 160,
+      "heightMaxCm": 180,
+      "strict": [
+        "height"
+      ]
+    },
+    "customerChanges": {
+      "heightCm": 150
+    }
   }
 ]
