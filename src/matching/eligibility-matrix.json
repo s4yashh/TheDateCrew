@@ -40,5 +40,19 @@
     "candidateChanges": {
       "dateOfBirth": "1986-10-13"
     }
+  },
+  {
+    "name": "strict age rejects a known age above the range",
+    "expected": false,
+    "customerPreferences": {
+      "ageMin": 30,
+      "ageMax": 40,
+      "strict": [
+        "age"
+      ]
+    },
+    "candidateChanges": {
+      "dateOfBirth": "1980-01-01"
+    }
   }
 ]
