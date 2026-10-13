@@ -552,5 +552,18 @@
         "childrenPreference"
       ]
     }
+  },
+  {
+    "name": "open relocation does not reject a partner who is not open",
+    "expected": true,
+    "customerPreferences": {
+      "relocation": "Open to relocate",
+      "strict": [
+        "relocation"
+      ]
+    },
+    "candidateChanges": {
+      "relocation": "Not open to relocate"
+    }
   }
 ]
