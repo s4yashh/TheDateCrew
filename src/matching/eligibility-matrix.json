@@ -281,5 +281,20 @@
     "candidateChanges": {
       "maritalStatus": "Divorced"
     }
+  },
+  {
+    "name": "strict marital status accepts a listed status",
+    "expected": true,
+    "customerPreferences": {
+      "maritalStatuses": [
+        "Never married"
+      ],
+      "strict": [
+        "maritalStatus"
+      ]
+    },
+    "candidateChanges": {
+      "maritalStatus": "Never married"
+    }
   }
 ]
