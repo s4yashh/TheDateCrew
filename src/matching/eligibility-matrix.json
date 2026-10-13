@@ -476,5 +476,11 @@
     "name": "dismissed pair is excluded from recommendations",
     "expected": false,
     "interactionStatus": "dismissed"
+  },
+  {
+    "name": "dismissed pair can be inspected in history",
+    "expected": true,
+    "interactionStatus": "dismissed",
+    "showPreviouslyContacted": true
   }
 ]
