@@ -65,8 +65,9 @@ export function Overview({
             <button className="text-button" onClick={() => onNavigate("customers")}>View customers <ArrowRight size={14} /></button></div>
           <div className="pipeline-list">
             {[
-              ["Onboarding", "onboarding"], ["Profile Incomplete", "incomplete"], ["Verified", "verified"],
+              ["New Lead", "onboarding"], ["Onboarding", "onboarding"], ["Profile Incomplete", "incomplete"], ["Verified", "verified"],
               ["Matchmaking", "matchmaking"], ["Introduction Sent", "sent"], ["Meeting Scheduled", "meeting"],
+              ["Follow-up", "meeting"], ["Converted", "verified"], ["On Hold", "incomplete"],
             ].map(([stage, style]) => {
               const count = clients.filter((profile) => profile.stage === stage).length;
               return <div className="pipeline-row" key={stage}>
