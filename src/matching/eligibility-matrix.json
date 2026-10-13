@@ -385,5 +385,18 @@
     "candidateChanges": {
       "relocation": "Open to relocate"
     }
+  },
+  {
+    "name": "strict relocation keeps an unknown answer eligible",
+    "expected": true,
+    "customerPreferences": {
+      "relocation": "Not open to relocate",
+      "strict": [
+        "relocation"
+      ]
+    },
+    "candidateChanges": {
+      "relocation": null
+    }
   }
 ]
