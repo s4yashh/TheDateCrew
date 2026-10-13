@@ -1,0 +1,16 @@
+[
+  {
+    "name": "strict age rejects a known age below the range",
+    "expected": false,
+    "customerPreferences": {
+      "ageMin": 30,
+      "ageMax": 40,
+      "strict": [
+        "age"
+      ]
+    },
+    "candidateChanges": {
+      "dateOfBirth": "2000-01-01"
+    }
+  }
+]
