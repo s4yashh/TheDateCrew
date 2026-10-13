@@ -362,5 +362,15 @@
     "candidateChanges": {
       "childrenPreference": null
     }
+  },
+  {
+    "name": "candidate strict children preference checks the customer",
+    "expected": false,
+    "candidatePreferences": {
+      "childrenPreference": "Do not want children",
+      "strict": [
+        "childrenPreference"
+      ]
+    }
   }
 ]
