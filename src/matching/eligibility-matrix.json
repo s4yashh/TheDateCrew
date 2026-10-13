@@ -113,5 +113,19 @@
         "age"
       ]
     }
+  },
+  {
+    "name": "reverse strict age treats the customer age as unknown",
+    "expected": true,
+    "candidatePreferences": {
+      "ageMin": 60,
+      "ageMax": 70,
+      "strict": [
+        "age"
+      ]
+    },
+    "customerChanges": {
+      "dateOfBirth": null
+    }
   }
 ]
