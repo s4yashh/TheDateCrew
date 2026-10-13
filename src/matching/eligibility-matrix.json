@@ -212,5 +212,20 @@
     "candidateChanges": {
       "city": "Mumbai"
     }
+  },
+  {
+    "name": "strict city accepts a city in the list",
+    "expected": true,
+    "customerPreferences": {
+      "cities": [
+        "Bengaluru"
+      ],
+      "strict": [
+        "city"
+      ]
+    },
+    "candidateChanges": {
+      "city": "Bengaluru"
+    }
   }
 ]
