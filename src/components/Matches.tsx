@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ArrowDownWideNarrow, ArrowRight, BadgeCheck, ChevronDown, CircleHelp, Heart, RefreshCw, Search, Send, ShieldCheck, Sparkles, X } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import { Avatar, EmptyState, VerificationPill } from "@/components/ui";
@@ -36,7 +36,7 @@ export function Matches({
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [minimumScore, setMinimumScore] = useState("Any score");
   const [sortOrder, setSortOrder] = useState("Highest score");
-  const [refreshCount, setRefreshCount] = useState(0);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [explanationId, setExplanationId] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
   const [busyPair, setBusyPair] = useState<string | null>(null);
@@ -46,11 +46,11 @@ export function Matches({
   const candidateCities = Array.from(new Set(candidates.map((profile) => profile.city).filter((value): value is string => Boolean(value)))).sort();
   const professions = Array.from(new Set(candidates.map((profile) => profile.profession).filter((value): value is string => Boolean(value)))).sort();
 
-  const allMatches = useMemo(() => customer ? rankMatches(customer, candidates, {
+  const allMatches = customer ? rankMatches(customer, candidates, {
     assessmentDemoMode,
     interactions: store.interactions,
     showPreviouslyContacted: true,
-  }) : [], [assessmentDemoMode, candidates, customer, refreshCount, store.interactions]);
+  }) : [];
   const countFor = (nextTab: MatchTab) => allMatches.filter((match) => {
     const interaction = store.interactions.find((item) => item.customerId === customer?.id && item.candidateId === match.candidateId);
     if (nextTab === "Recommended") return !interaction;
@@ -104,7 +104,7 @@ export function Matches({
         <label className="search-field match-search"><Search size={15} /><input aria-label="Search match candidates" placeholder="Search profiles…" value={search} onChange={(event) => setSearch(event.target.value)} />{search && <button className="search-clear" aria-label="Clear match search" onClick={() => setSearch("")}><X size={13} /></button>}</label>
         <button className={`filter-toggle ${showFilters ? "active" : ""}`} onClick={() => setShowFilters((value) => !value)}><ArrowDownWideNarrow size={15} /> Filters {showFilters ? <X size={13} /> : <ChevronDown size={13} />}</button>
         <label className="sort-match-label"><span>Sort by</span><select aria-label="Sort recommendations" value={sortOrder} onChange={(event) => setSortOrder(event.target.value)}><option>Highest score</option><option>Lowest score</option></select></label>
-        <button className="refresh-button" onClick={() => setRefreshCount((value) => value + 1)}><RefreshCw size={14} /> Refresh</button>
+        <button className="refresh-button" onClick={() => setLastRefreshed(new Date())}><RefreshCw size={14} /> Refresh</button>
       </div>
       {showFilters && <div className="advanced-match-filters">
         <label>City<select value={city} onChange={(event) => setCity(event.target.value)}><option>All cities</option>{candidateCities.map((item) => <option key={item}>{item}</option>)}</select></label>
@@ -114,7 +114,7 @@ export function Matches({
         <button className="text-button" onClick={() => { setCity("All cities"); setProfession("All professions"); setMinimumScore("Any score"); setVerifiedOnly(false); }}>Reset filters</button>
       </div>}
       {actionError && <div className="inline-alert" role="alert">{actionError}<button className="icon-button" onClick={() => setActionError("")} aria-label="Dismiss error"><X size={14} /></button></div>}
-      <div className="match-list-summary"><span>{visibleMatches.length} {visibleMatches.length === 1 ? "profile" : "profiles"} <span className="muted-inline">·</span> ranked for {customer.firstName}</span><span>Last refreshed just now</span></div>
+      <div className="match-list-summary"><span>{visibleMatches.length} {visibleMatches.length === 1 ? "profile" : "profiles"} <span className="muted-inline">·</span> ranked for {customer.firstName}</span><span>{lastRefreshed ? `Updated at ${lastRefreshed.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}` : "Scores use current profile data"}</span></div>
       <div className="match-card-list">{visibleMatches.map((match) => {
         const profile = candidates.find((candidateItem) => candidateItem.id === match.candidateId)!;
         const interaction = store.interactions.find((item) => item.customerId === customer.id && item.candidateId === profile.id);
