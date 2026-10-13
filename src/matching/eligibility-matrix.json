@@ -482,5 +482,10 @@
     "expected": true,
     "interactionStatus": "dismissed",
     "showPreviouslyContacted": true
+  },
+  {
+    "name": "sent pair is excluded from recommendations",
+    "expected": false,
+    "interactionStatus": "sent"
   }
 ]
