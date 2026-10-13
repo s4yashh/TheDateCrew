@@ -498,5 +498,18 @@
     "name": "shortlisted pair remains eligible for a follow-up action",
     "expected": true,
     "interactionStatus": "shortlisted"
+  },
+  {
+    "name": "flexible city mismatch changes ranking but does not exclude",
+    "expected": true,
+    "customerPreferences": {
+      "cities": [
+        "Chennai"
+      ],
+      "strict": []
+    },
+    "candidateChanges": {
+      "city": "Jaipur"
+    }
   }
 ]
