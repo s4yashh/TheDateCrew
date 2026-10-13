@@ -323,5 +323,18 @@
         "maritalStatus"
       ]
     }
+  },
+  {
+    "name": "strict children preference rejects an explicit conflict",
+    "expected": false,
+    "customerPreferences": {
+      "childrenPreference": "Want children",
+      "strict": [
+        "childrenPreference"
+      ]
+    },
+    "candidateChanges": {
+      "childrenPreference": "Do not want children"
+    }
   }
 ]
