@@ -169,5 +169,19 @@
     "candidateChanges": {
       "heightCm": 160
     }
+  },
+  {
+    "name": "strict height keeps an unknown height eligible",
+    "expected": true,
+    "customerPreferences": {
+      "heightMinCm": 160,
+      "heightMaxCm": 180,
+      "strict": [
+        "height"
+      ]
+    },
+    "candidateChanges": {
+      "heightCm": null
+    }
   }
 ]
