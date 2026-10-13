@@ -311,5 +311,17 @@
     "candidateChanges": {
       "maritalStatus": null
     }
+  },
+  {
+    "name": "candidate strict marital status checks the customer",
+    "expected": false,
+    "candidatePreferences": {
+      "maritalStatuses": [
+        "Divorced"
+      ],
+      "strict": [
+        "maritalStatus"
+      ]
+    }
   }
 ]
