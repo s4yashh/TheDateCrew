@@ -609,5 +609,18 @@
     "customerChanges": {
       "maritalStatus": null
     }
+  },
+  {
+    "name": "reverse strict children rule with unknown customer plan remains eligible",
+    "expected": true,
+    "candidatePreferences": {
+      "childrenPreference": "Want children",
+      "strict": [
+        "childrenPreference"
+      ]
+    },
+    "customerChanges": {
+      "childrenPreference": null
+    }
   }
 ]
