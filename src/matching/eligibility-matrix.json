@@ -622,5 +622,21 @@
     "customerChanges": {
       "childrenPreference": null
     }
+  },
+  {
+    "name": "showing sent history never overrides a known strict age violation",
+    "expected": false,
+    "customerPreferences": {
+      "ageMin": 50,
+      "ageMax": 60,
+      "strict": [
+        "age"
+      ]
+    },
+    "candidateChanges": {
+      "dateOfBirth": "2000-01-01"
+    },
+    "interactionStatus": "sent",
+    "showPreviouslyContacted": true
   }
 ]
