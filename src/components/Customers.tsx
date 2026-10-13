@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ArrowDownUp, ChevronLeft, ChevronRight, Search, SlidersHorizontal, UsersRound, X } from "lucide-react";
 import type { Profile } from "@/domain/types";
 import { getAge, profileName } from "@/domain/types";
@@ -23,7 +23,7 @@ export function Customers({ profiles, onOpen }: { profiles: Profile[]; onOpen: (
   const cities = Array.from(new Set(clients.map((profile) => profile.city).filter((value): value is string => Boolean(value)))).sort();
   const hasFilters = search || stage !== "All stages" || city !== "All cities" || maritalStatus !== "All statuses" || gender !== "All genders" || verification !== "All verification";
 
-  const filtered = useMemo(() => {
+  const filtered = (() => {
     const query = search.trim().toLowerCase();
     return clients.filter((profile) => {
       const searchable = [profile.firstName, profile.lastName, profile.city, profile.profession].filter(Boolean).join(" ").toLowerCase();
@@ -39,7 +39,7 @@ export function Customers({ profiles, onOpen }: { profiles: Profile[]; onOpen: (
       if (sort === "completeness") return right.profileCompleteness - left.profileCompleteness;
       return right.lastActivityAt.localeCompare(left.lastActivityAt);
     });
-  }, [clients, city, gender, maritalStatus, search, sort, stage, verification]);
+  })();
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
