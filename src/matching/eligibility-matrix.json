@@ -90,5 +90,17 @@
         "age"
       ]
     }
+  },
+  {
+    "name": "a flexible age mismatch does not exclude the pair",
+    "expected": true,
+    "customerPreferences": {
+      "ageMin": 30,
+      "ageMax": 35,
+      "strict": []
+    },
+    "candidateChanges": {
+      "dateOfBirth": "1980-01-01"
+    }
   }
 ]
