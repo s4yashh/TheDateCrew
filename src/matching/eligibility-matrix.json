@@ -266,5 +266,20 @@
         "city"
       ]
     }
+  },
+  {
+    "name": "strict marital status rejects a known unlisted status",
+    "expected": false,
+    "customerPreferences": {
+      "maritalStatuses": [
+        "Never married"
+      ],
+      "strict": [
+        "maritalStatus"
+      ]
+    },
+    "candidateChanges": {
+      "maritalStatus": "Divorced"
+    }
   }
 ]
