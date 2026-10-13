@@ -120,6 +120,8 @@ function buildProfile(index: number, assigned: boolean, gender: Gender): Profile
     childrenPreference: isMissing(12) ? null : pick(CHILDREN, seed * 59),
     relocation: isMissing(8) ? null : seed % 2 === 0 ? "Open to relocate" : "Not open to relocate",
     petsPreference: isMissing(10) ? null : pick(["Loves pets", "Open to pets", "No pets"], seed * 61),
+    smokingPreference: isMissing(5) ? null : pick(["Does not smoke", "Prefer to discuss", "Occasionally"], seed * 83),
+    drinkingPreference: isMissing(6) ? null : pick(["Does not drink", "Socially", "Prefer to discuss"], seed * 89),
     lifestyle: list(LIFESTYLES, seed * 67, 2 + (seed % 3)),
     hobbies,
     values,

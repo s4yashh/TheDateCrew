@@ -68,6 +68,8 @@ export interface Profile {
   childrenPreference: ChildrenPreference | null;
   relocation: "Open to relocate" | "Not open to relocate" | null;
   petsPreference: string | null;
+  smokingPreference: string | null;
+  drinkingPreference: string | null;
   lifestyle: string[];
   hobbies: string[];
   values: string[];
