@@ -49,8 +49,8 @@ export function SendMatchDialog({ customer, candidate, match, onClose, onConfirm
 
   useEffect(() => {
     const controller = new AbortController();
-    void generateDraft(controller.signal);
-    return () => controller.abort();
+    const task = window.setTimeout(() => void generateDraft(controller.signal), 0);
+    return () => { window.clearTimeout(task); controller.abort(); };
   }, [generateDraft]);
 
   async function confirm() {
