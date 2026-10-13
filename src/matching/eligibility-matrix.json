@@ -542,5 +542,15 @@
         "maritalStatus"
       ]
     }
+  },
+  {
+    "name": "strict children setting without an explicit preference has no hard constraint",
+    "expected": true,
+    "customerPreferences": {
+      "childrenPreference": null,
+      "strict": [
+        "childrenPreference"
+      ]
+    }
   }
 ]
