@@ -532,5 +532,15 @@
         "height"
       ]
     }
+  },
+  {
+    "name": "strict marital status without selected statuses has no hard constraint",
+    "expected": true,
+    "customerPreferences": {
+      "maritalStatuses": [],
+      "strict": [
+        "maritalStatus"
+      ]
+    }
   }
 ]
