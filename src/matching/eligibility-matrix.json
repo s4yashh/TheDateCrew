@@ -26,5 +26,19 @@
     "candidateChanges": {
       "dateOfBirth": "1996-10-13"
     }
+  },
+  {
+    "name": "strict age accepts the inclusive maximum",
+    "expected": true,
+    "customerPreferences": {
+      "ageMin": 30,
+      "ageMax": 40,
+      "strict": [
+        "age"
+      ]
+    },
+    "candidateChanges": {
+      "dateOfBirth": "1986-10-13"
+    }
   }
 ]
