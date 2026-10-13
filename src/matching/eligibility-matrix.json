@@ -521,5 +521,16 @@
         "city"
       ]
     }
+  },
+  {
+    "name": "strict height without a range has no hard constraint",
+    "expected": true,
+    "customerPreferences": {
+      "heightMinCm": null,
+      "heightMaxCm": null,
+      "strict": [
+        "height"
+      ]
+    }
   }
 ]
