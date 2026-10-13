@@ -579,5 +579,20 @@
     "customerChanges": {
       "dateOfBirth": null
     }
+  },
+  {
+    "name": "reverse strict city with unknown customer city remains eligible",
+    "expected": true,
+    "candidatePreferences": {
+      "cities": [
+        "Delhi"
+      ],
+      "strict": [
+        "city"
+      ]
+    },
+    "customerChanges": {
+      "city": null
+    }
   }
 ]
