@@ -442,5 +442,10 @@
     "candidateChanges": {
       "gender": "nonbinary"
     }
+  },
+  {
+    "name": "the same profile ID cannot match itself",
+    "expected": false,
+    "sameId": true
   }
 ]
