@@ -594,5 +594,20 @@
     "customerChanges": {
       "city": null
     }
+  },
+  {
+    "name": "reverse strict marital status with missing customer status remains eligible",
+    "expected": true,
+    "candidatePreferences": {
+      "maritalStatuses": [
+        "Never married"
+      ],
+      "strict": [
+        "maritalStatus"
+      ]
+    },
+    "customerChanges": {
+      "maritalStatus": null
+    }
   }
 ]
