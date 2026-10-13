@@ -8,7 +8,6 @@ const STORE_PATH = join(STORE_DIRECTORY, "demo-store.json");
 const TEMP_PATH = join(STORE_DIRECTORY, "demo-store.tmp");
 
 declare global {
-  // eslint-disable-next-line no-var
   var demoStoreWriteQueue: Promise<unknown> | undefined;
 }
 
