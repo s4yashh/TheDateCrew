@@ -197,5 +197,20 @@
     "customerChanges": {
       "heightCm": 150
     }
+  },
+  {
+    "name": "strict city rejects a known city outside the list",
+    "expected": false,
+    "customerPreferences": {
+      "cities": [
+        "Bengaluru"
+      ],
+      "strict": [
+        "city"
+      ]
+    },
+    "candidateChanges": {
+      "city": "Mumbai"
+    }
   }
 ]
