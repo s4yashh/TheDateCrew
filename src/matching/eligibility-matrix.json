@@ -242,5 +242,17 @@
     "candidateChanges": {
       "city": null
     }
+  },
+  {
+    "name": "candidate strict city preference checks the customer",
+    "expected": false,
+    "candidatePreferences": {
+      "cities": [
+        "Chennai"
+      ],
+      "strict": [
+        "city"
+      ]
+    }
   }
 ]
