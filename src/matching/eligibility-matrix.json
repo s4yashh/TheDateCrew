@@ -79,5 +79,16 @@
         "age"
       ]
     }
+  },
+  {
+    "name": "candidate strict age preference accepts an in-range customer",
+    "expected": true,
+    "candidatePreferences": {
+      "ageMin": 40,
+      "ageMax": 45,
+      "strict": [
+        "age"
+      ]
+    }
   }
 ]
