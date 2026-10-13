@@ -169,6 +169,7 @@ function MatchCard({ profile, match, interactionStatus, expanded, busy, onToggle
     </div>
     {expanded && <div className="match-explanation"><div className="explanation-column"><h4><Sparkles size={14} /> Supported reasons</h4>{match.positiveReasons.length ? <ul>{match.positiveReasons.map((reason) => <li key={reason}>{reason}</li>)}</ul> : <p>Not enough profile detail to identify a specific overlap yet. Treat this as a prompt for review.</p>}</div>
       <div className="explanation-column tradeoff-column"><h4><ShieldCheck size={14} /> Trade-offs & unknowns</h4>{match.tradeoffs.length ? <ul>{match.tradeoffs.map((reason) => <li key={reason}>{reason}</li>)}</ul> : <p>No notable trade-offs surfaced from the details provided.</p>}</div>
+      {match.assessmentReasons.length > 0 && <div className="explanation-column assessment-explanation"><h4><ShieldCheck size={14} /> Optional assessment demo signals</h4><ul>{match.assessmentReasons.map((reason) => <li key={reason}>{reason}</li>)}</ul></div>}
       <div className="explanation-meta"><span>Forward fit <strong>{match.forwardFit}</strong></span><span>Reverse fit <strong>{match.reverseFit}</strong></span>{match.assessmentBonus > 0 && <span>Assessment demo signal <strong>+{match.assessmentBonus}</strong></span>}<span>Human review required</span></div>
     </div>}
   </article>;
