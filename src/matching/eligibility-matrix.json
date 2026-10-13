@@ -447,5 +447,10 @@
     "name": "the same profile ID cannot match itself",
     "expected": false,
     "sameId": true
+  },
+  {
+    "name": "matching name and known birth date is treated as the same person",
+    "expected": false,
+    "samePerson": true
   }
 ]
