@@ -155,5 +155,19 @@
     "candidateChanges": {
       "heightCm": 190
     }
+  },
+  {
+    "name": "strict height accepts the inclusive minimum",
+    "expected": true,
+    "customerPreferences": {
+      "heightMinCm": 160,
+      "heightMaxCm": 180,
+      "strict": [
+        "height"
+      ]
+    },
+    "candidateChanges": {
+      "heightCm": 160
+    }
   }
 ]
