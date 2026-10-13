@@ -68,5 +68,16 @@
     "candidateChanges": {
       "dateOfBirth": null
     }
+  },
+  {
+    "name": "candidate strict age preference rejects an older customer",
+    "expected": false,
+    "candidatePreferences": {
+      "ageMin": 60,
+      "ageMax": 70,
+      "strict": [
+        "age"
+      ]
+    }
   }
 ]
