@@ -565,5 +565,19 @@
     "candidateChanges": {
       "relocation": "Not open to relocate"
     }
+  },
+  {
+    "name": "reverse strict age with unknown customer age remains eligible",
+    "expected": true,
+    "candidatePreferences": {
+      "ageMin": 60,
+      "ageMax": 70,
+      "strict": [
+        "age"
+      ]
+    },
+    "customerChanges": {
+      "dateOfBirth": null
+    }
   }
 ]
