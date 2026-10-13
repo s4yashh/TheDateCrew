@@ -428,5 +428,12 @@
     "candidateChanges": {
       "gender": "man"
     }
+  },
+  {
+    "name": "nonbinary customer is outside the binary assessment pool",
+    "expected": false,
+    "customerChanges": {
+      "gender": "nonbinary"
+    }
   }
 ]
