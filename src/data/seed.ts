@@ -152,6 +152,33 @@ function event(id: string, profileId: string, type: ActivityEvent["type"], descr
 export function createSeedStore(): DemoStore {
   const clients = Array.from({ length: 12 }, (_, index) => buildProfile(index, true, index % 2 === 0 ? "man" : "woman"));
   const candidates = Array.from({ length: 120 }, (_, index) => buildProfile(index, false, index % 2 === 0 ? "woman" : "man"));
+  const referenceCustomer = clients[0];
+  const lowFitExample = candidates[118];
+  const differentValues = VALUES.filter((value) => !referenceCustomer.values.includes(value));
+  const differentInterests = INTERESTS.filter((interest) => !referenceCustomer.hobbies.includes(interest) && !referenceCustomer.preferences.interests.includes(interest));
+  lowFitExample.dateOfBirth = "1988-06-15";
+  lowFitExample.city = LOCATIONS.map(([name]) => name).find((name) => name !== referenceCustomer.city) ?? "Mumbai";
+  lowFitExample.profession = PROFESSIONS.find((profession) => profession !== referenceCustomer.profession) ?? "Researcher";
+  lowFitExample.degree = DEGREES.find((degree) => degree !== referenceCustomer.degree) ?? "M.A.";
+  lowFitExample.languages = LANGUAGES.filter((language) => !referenceCustomer.languages.includes(language)).slice(0, 2);
+  lowFitExample.values = differentValues.slice(0, 2);
+  lowFitExample.hobbies = differentInterests.slice(0, 3);
+  lowFitExample.childrenPreference = "Do not want children";
+  lowFitExample.familyValues = "Traditional";
+  lowFitExample.relocation = "Not open to relocate";
+  lowFitExample.verification = "Unverified";
+  lowFitExample.preferences = {
+    ...lowFitExample.preferences,
+    ageMin: 64,
+    ageMax: 70,
+    cities: ["Delhi"],
+    professions: PROFESSIONS.filter((profession) => profession !== referenceCustomer.profession).slice(0, 2),
+    languages: LANGUAGES.filter((language) => !referenceCustomer.languages.includes(language)).slice(0, 2),
+    childrenPreference: "Want children",
+    values: differentValues.slice(2, 5),
+    interests: differentInterests.slice(3, 6),
+    strict: [],
+  };
   const profiles = [...clients, ...candidates];
   const interactions = [
     { customerId: clients[0].id, candidateId: candidates[0].id, status: "shortlisted" as const, updatedAt: "2026-10-12T12:00:00.000Z" },
