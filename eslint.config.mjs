@@ -1,9 +1,9 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTypeScript from "eslint-config-next/typescript";
+import reactHooks from "eslint-plugin-react-hooks";
+import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  ...nextVitals,
-  ...nextTypeScript,
   globalIgnores([".next/**", "node_modules/**", "coverage/**"]),
+  ...tseslint.configs.recommended,
+  reactHooks.configs.flat.recommended,
 ]);
