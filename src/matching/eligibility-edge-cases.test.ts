@@ -57,6 +57,12 @@ describe("matching eligibility edge cases", () => {
     expect(checkEligibility(other, target).reasons.join(" ")).toContain("same person");
   });
 
+  it("does not assume two people with a shared name and missing birth dates are the same person", () => {
+    const { owner, target } = pair({ strict: [] }, { firstName: "Shared", lastName: "Person", dateOfBirth: null });
+    const other = { ...owner, id: "client-999", firstName: "Shared", lastName: "Person", dateOfBirth: null };
+    expect(checkEligibility(other, target).eligible).toBe(true);
+  });
+
   it("does not turn flexible preference mismatches into hard filters", () => {
     const { owner, target } = pair({ cities: ["Chennai"], maritalStatuses: ["Never married"], strict: [] }, { city: "Jaipur", maritalStatus: "Divorced" });
     expect(checkEligibility(owner, target).eligible).toBe(true);

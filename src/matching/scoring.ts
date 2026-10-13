@@ -109,7 +109,7 @@ export function checkEligibility(customer: Profile, candidate: Profile, options:
   const now = options.now ?? new Date("2026-10-13T12:00:00.000Z");
   const reasons: string[] = [];
   if (customer.id === candidate.id) reasons.push("A profile cannot be matched with itself.");
-  if (customer.firstName === candidate.firstName && customer.lastName === candidate.lastName && customer.dateOfBirth === candidate.dateOfBirth) {
+  if (customer.firstName === candidate.firstName && customer.lastName === candidate.lastName && customer.dateOfBirth !== null && customer.dateOfBirth === candidate.dateOfBirth) {
     reasons.push("These records describe the same person.");
   }
   if (customer.gender === candidate.gender || customer.gender === "nonbinary" || candidate.gender === "nonbinary") {
