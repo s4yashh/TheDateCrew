@@ -349,5 +349,18 @@
     "candidateChanges": {
       "childrenPreference": "Open to children"
     }
+  },
+  {
+    "name": "strict children preference keeps missing family plans unknown",
+    "expected": true,
+    "customerPreferences": {
+      "childrenPreference": "Want children",
+      "strict": [
+        "childrenPreference"
+      ]
+    },
+    "candidateChanges": {
+      "childrenPreference": null
+    }
   }
 ]
