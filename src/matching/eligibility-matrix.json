@@ -336,5 +336,18 @@
     "candidateChanges": {
       "childrenPreference": "Do not want children"
     }
+  },
+  {
+    "name": "open-to-children remains compatible with a strict family plan",
+    "expected": true,
+    "customerPreferences": {
+      "childrenPreference": "Want children",
+      "strict": [
+        "childrenPreference"
+      ]
+    },
+    "candidateChanges": {
+      "childrenPreference": "Open to children"
+    }
   }
 ]
