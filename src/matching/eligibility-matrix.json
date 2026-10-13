@@ -372,5 +372,18 @@
         "childrenPreference"
       ]
     }
+  },
+  {
+    "name": "strict relocation rejects the defined conflicting preference",
+    "expected": false,
+    "customerPreferences": {
+      "relocation": "Not open to relocate",
+      "strict": [
+        "relocation"
+      ]
+    },
+    "candidateChanges": {
+      "relocation": "Open to relocate"
+    }
   }
 ]
