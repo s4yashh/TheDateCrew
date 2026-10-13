@@ -128,8 +128,9 @@ export interface DemoStore {
 
 export function getAge(dateOfBirth: string | null, now = new Date()): number | null {
   if (!dateOfBirth) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) return null;
   const date = new Date(`${dateOfBirth}T00:00:00.000Z`);
-  if (Number.isNaN(date.getTime()) || date > now) return null;
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== dateOfBirth || date > now) return null;
   let age = now.getUTCFullYear() - date.getUTCFullYear();
   const monthDiff = now.getUTCMonth() - date.getUTCMonth();
   if (monthDiff < 0 || (monthDiff === 0 && now.getUTCDate() < date.getUTCDate())) age -= 1;

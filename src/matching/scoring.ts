@@ -36,6 +36,7 @@ export interface MatchResult {
   hardFilterReasons: string[];
   algorithmVersion: string;
   assessmentBonus: number;
+  assessmentReasons: string[];
 }
 
 export interface MatchOptions {
@@ -255,15 +256,15 @@ function confidenceScore(customer: Profile, candidate: Profile): FitDetails {
   };
 }
 
-function demoHeuristicBonus(customer: Profile, candidate: Profile, now: Date): { bonus: number; reasons: string[] } {
+function demoHeuristicBonus(customer: Profile, candidate: Profile, now: Date, compatibility: { career: number; values: number; location: number }): { bonus: number; reasons: string[] } {
   const reasons: string[] = [];
   if (customer.gender === "man") {
     const clientAge = ageAt(customer, now);
     const candidateAge = ageAt(candidate, now);
-    if (clientAge !== null && candidateAge !== null && candidateAge < clientAge && customer.preferences.ageMin === null) {
-      reasons.push("Assessment demo heuristic: small age-direction signal (not a user preference). ");
+    if (clientAge !== null && candidateAge !== null && candidateAge < clientAge && customer.preferences.ageMin === null && customer.preferences.ageMax === null) {
+      reasons.push("Assessment demo heuristic: small age-direction signal (not a user preference).");
     }
-    if (customer.heightCm !== null && candidate.heightCm !== null && candidate.heightCm < customer.heightCm && customer.preferences.heightMinCm === null) {
+    if (customer.heightCm !== null && candidate.heightCm !== null && candidate.heightCm < customer.heightCm && customer.preferences.heightMinCm === null && customer.preferences.heightMaxCm === null) {
       reasons.push("Assessment demo heuristic: small height-direction signal (not a user preference).");
     }
     const clientIncome = incomeNumber(customer.incomeBand);
@@ -272,11 +273,11 @@ function demoHeuristicBonus(customer: Profile, candidate: Profile, now: Date): {
       reasons.push("Assessment demo heuristic: small relative-income signal (not a user preference).");
     }
   } else if (customer.gender === "woman") {
-    if (customer.profession && candidate.profession) reasons.push("Assessment demo mode gives extra attention to stated career compatibility.");
-    if (customer.values.length && candidate.values.length) reasons.push("Assessment demo mode gives extra attention to shared values.");
-    if (customer.relocation && candidate.relocation) reasons.push("Assessment demo mode gives extra attention to relocation compatibility.");
+    if (customer.profession && candidate.profession && compatibility.career >= 70) reasons.push("Assessment demo mode: a small career-compatibility emphasis.");
+    if (customer.values.length && candidate.values.length && compatibility.values >= 70) reasons.push("Assessment demo mode: a small shared-values emphasis.");
+    if (customer.relocation && candidate.relocation && compatibility.location >= 70) reasons.push("Assessment demo mode: a small relocation-compatibility emphasis.");
   }
-  return { bonus: Math.min(customer.gender === "man" ? 6 : 4, reasons.length * 2), reasons };
+  return { bonus: Math.min(customer.gender === "man" ? 6 : 4, reasons.length * (customer.gender === "man" ? 2 : 1.25)), reasons };
 }
 
 function incomeNumber(band: string | null): number | null {
@@ -333,7 +334,13 @@ export function scoreMatch(customer: Profile, candidate: Profile, options: Match
   const rawScore = components.reduce((sum, component) => sum + component.contribution, 0);
   const unknownCount = Object.values(categoryValues).reduce((sum, component) => sum + component.unknowns, 0);
   const uncertaintyPenalty = Math.min(10, unknownCount * 0.45);
-  const demoHeuristic = options.assessmentDemoMode ? demoHeuristicBonus(customer, candidate, now) : { bonus: 0, reasons: [] };
+  const demoHeuristic = options.assessmentDemoMode
+    ? demoHeuristicBonus(customer, candidate, now, {
+      career: categoryValues.careerEducationLifestyle.score,
+      values: categoryValues.valuesAndIntentions.score,
+      location: categoryValues.locationAndRelocation.score,
+    })
+    : { bonus: 0, reasons: [] };
   const overallScore = round(clamp(rawScore - uncertaintyPenalty + demoHeuristic.bonus));
   const positiveReasons = [
     ...forward.reasons,
@@ -364,6 +371,7 @@ export function scoreMatch(customer: Profile, candidate: Profile, options: Match
     hardFilterReasons: eligibility.reasons,
     algorithmVersion: ALGORITHM_VERSION,
     assessmentBonus: demoHeuristic.bonus,
+    assessmentReasons: demoHeuristic.reasons,
   };
 }
 
