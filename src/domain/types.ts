@@ -102,7 +102,7 @@ export interface MatchNote {
 export interface ActivityEvent {
   id: string;
   profileId: string;
-  type: "stage" | "note" | "shortlist" | "dismiss" | "introduction";
+  type: "stage" | "note" | "shortlist" | "dismiss" | "introduction" | "draft";
   description: string;
   createdAt: string;
   relatedProfileId?: string;
