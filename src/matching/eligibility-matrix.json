@@ -254,5 +254,17 @@
         "city"
       ]
     }
+  },
+  {
+    "name": "candidate strict city preference accepts a matching city",
+    "expected": true,
+    "candidatePreferences": {
+      "cities": [
+        "Guwahati"
+      ],
+      "strict": [
+        "city"
+      ]
+    }
   }
 ]
