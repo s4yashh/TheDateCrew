@@ -493,5 +493,10 @@
     "expected": true,
     "interactionStatus": "sent",
     "showPreviouslyContacted": true
+  },
+  {
+    "name": "shortlisted pair remains eligible for a follow-up action",
+    "expected": true,
+    "interactionStatus": "shortlisted"
   }
 ]
