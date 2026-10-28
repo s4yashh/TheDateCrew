@@ -4,24 +4,47 @@ import { profileName } from "@/domain/types";
 import type { ActivityEvent, DemoStore, MatchInteraction } from "@/domain/types";
 import type { ActionPayload } from "@/domain/validation";
 
+/** The signed-in matchmaker. Ownership checks and note authorship use this. */
+export interface ActionActor {
+  id: string;
+  name: string;
+}
+
 function addActivity(store: DemoStore, event: Omit<ActivityEvent, "id" | "createdAt">): void {
   store.activities.unshift({ ...event, id: randomUUID(), createdAt: new Date().toISOString() });
 }
 
-function requireProfiles(store: DemoStore, customerId: string): { customer: DemoStore["profiles"][number] };
-function requireProfiles(store: DemoStore, customerId: string, candidateId: string): { customer: DemoStore["profiles"][number]; candidate: DemoStore["profiles"][number] };
-function requireProfiles(store: DemoStore, customerId: string, candidateId?: string) {
+function requireProfiles(store: DemoStore, actor: ActionActor, customerId: string): { customer: DemoStore["profiles"][number] };
+function requireProfiles(
+  store: DemoStore,
+  actor: ActionActor,
+  customerId: string,
+  candidateId: string,
+): { customer: DemoStore["profiles"][number]; candidate: DemoStore["profiles"][number] };
+function requireProfiles(store: DemoStore, actor: ActionActor, customerId: string, candidateId?: string) {
   const customer = store.profiles.find((profile) => profile.id === customerId);
-  if (!customer?.assigned) throw new Error("Customer not found in your assigned accounts.");
+  if (!customer || customer.assignedMatchmakerId !== actor.id) {
+    throw new Error("Customer not found in your assigned accounts.");
+  }
   if (!candidateId) return { customer };
   const candidate = store.profiles.find((profile) => profile.id === candidateId);
-  if (!candidate || candidate.assigned) throw new Error("Candidate profile was not found.");
+  if (!candidate || candidate.assignedMatchmakerId !== null) {
+    throw new Error("Candidate profile was not found.");
+  }
   return { customer, candidate };
 }
 
-export function applyAction(store: DemoStore, action: ActionPayload, author = "Maya Shah"): void {
+/**
+ * Apply a validated action inside a store transaction.
+ *
+ * The actor's ID is the authorisation boundary: a matchmaker may only change
+ * customers assigned to them, and notes are attributed to the signed-in user.
+ */
+export function applyAction(store: DemoStore, action: ActionPayload, actor: ActionActor): void {
   if (action.action === "stage") {
-    const profile = store.profiles.find((item) => item.id === action.profileId && item.assigned);
+    const profile = store.profiles.find(
+      (item) => item.id === action.profileId && item.assignedMatchmakerId === actor.id,
+    );
     if (!profile) throw new Error("Assigned customer was not found.");
     const previousStage = profile.stage;
     if (previousStage === action.stage) return;
@@ -31,15 +54,15 @@ export function applyAction(store: DemoStore, action: ActionPayload, author = "M
     return;
   }
   if (action.action === "note") {
-    const { customer } = requireProfiles(store, action.profileId);
-    const note = { id: randomUUID(), profileId: customer.id, author, type: action.type, text: action.text, createdAt: new Date().toISOString() };
+    const { customer } = requireProfiles(store, actor, action.profileId);
+    const note = { id: randomUUID(), profileId: customer.id, author: actor.name, type: action.type, text: action.text, createdAt: new Date().toISOString() };
     store.notes.unshift(note);
     customer.lastActivityAt = note.createdAt;
     addActivity(store, { profileId: customer.id, type: "note", description: `${action.type} note added.` });
     return;
   }
 
-  const { customer, candidate } = requireProfiles(store, action.customerId, action.candidateId);
+  const { customer, candidate } = requireProfiles(store, actor, action.customerId, action.candidateId);
   const existing = store.interactions.find((item) => item.customerId === customer.id && item.candidateId === candidate.id);
   if (action.action === "restore") {
     if (existing?.status === "sent") throw new Error("Sent introductions cannot be recalled from the demo outbox.");
