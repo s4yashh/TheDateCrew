@@ -26,7 +26,7 @@
   {"name":"strict children preference rejects an explicit conflict","expected":false,"customerPreferences":{"childrenPreference":"Yes","strict":["childrenPreference"]},"candidateChanges":{"childrenPreference":"No"}},
   {"name":"a Maybe family plan remains compatible with a strict family plan","expected":true,"customerPreferences":{"childrenPreference":"Yes","strict":["childrenPreference"]},"candidateChanges":{"childrenPreference":"Maybe"}},
   {"name":"strict children preference keeps missing family plans unknown","expected":true,"customerPreferences":{"childrenPreference":"Yes","strict":["childrenPreference"]},"candidateChanges":{"childrenPreference":null}},
-  {"name":"candidate strict children preference checks the customer","expected":false,"candidatePreferences":{"childrenPreference":"No","strict":["childrenPreference"]}},
+  {"name":"candidate strict children preference checks the customer","expected":false,"candidatePreferences":{"childrenPreference":"No","strict":["childrenPreference"]},"customerChanges":{"childrenPreference":"Yes"}},
   {"name":"strict relocation rejects the defined conflicting preference","expected":false,"customerPreferences":{"relocation":"Yes","strict":["relocation"]},"candidateChanges":{"relocation":"No"}},
   {"name":"strict relocation keeps an unknown answer eligible","expected":true,"customerPreferences":{"relocation":"Yes","strict":["relocation"]},"candidateChanges":{"relocation":null}},
   {"name":"candidate strict relocation is evaluated in reverse","expected":false,"candidatePreferences":{"relocation":"Yes","strict":["relocation"]},"customerChanges":{"relocation":"No"}},
