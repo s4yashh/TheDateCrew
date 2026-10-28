@@ -27,6 +27,7 @@ export const actionSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
-export const introDraftSchema = z.object({ customerId: profileId, candidateId: profileId });
+export const matchPairSchema = z.object({ customerId: profileId, candidateId: profileId });
+export const introDraftSchema = matchPairSchema;
 
 export type ActionPayload = z.infer<typeof actionSchema>;
