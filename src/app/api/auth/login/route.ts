@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
-import { createSessionToken, recordLoginAttempt, resetLoginAttempts, SESSION_COOKIE, verifyDemoCredentials } from "@/auth/session";
+import { authenticateMatchmaker } from "@/auth/authenticate";
+import { createSessionToken, recordLoginAttempt, resetLoginAttempts, SESSION_COOKIE } from "@/auth/session";
+import { readStore } from "@/data/store";
 import { loginSchema } from "@/domain/validation";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -21,13 +26,16 @@ export async function POST(request: Request) {
       headers: { "Retry-After": String(limit.retryAfterSeconds) },
     });
   }
-  if (!verifyDemoCredentials(parsed.data.email, parsed.data.password)) {
-    return NextResponse.json({ error: "Those credentials don’t match the demo account." }, { status: 401 });
+
+  const store = await readStore();
+  const matchmaker = authenticateMatchmaker(store, parsed.data.email, parsed.data.password);
+  if (!matchmaker) {
+    return NextResponse.json({ error: "Those credentials don’t match a demo account." }, { status: 401 });
   }
 
   resetLoginAttempts(attemptKey);
-  const response = NextResponse.json({ ok: true });
-  response.cookies.set(SESSION_COOKIE, createSessionToken(parsed.data.email.trim().toLowerCase()), {
+  const response = NextResponse.json({ ok: true, matchmaker: { id: matchmaker.id, name: matchmaker.name } });
+  response.cookies.set(SESSION_COOKIE, createSessionToken(matchmaker.id, matchmaker.email), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
