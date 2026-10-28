@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createSeedStore } from "@/data/seed";
-import { checkEligibility, rankMatches, scoreMatch } from "@/matching/scoring";
+import { SCORE_WEIGHTS, checkEligibility, rankMatches, scoreMatch } from "@/matching/scoring";
 import { getAge } from "@/domain/types";
 import type { Profile } from "@/domain/types";
 
@@ -42,7 +42,7 @@ describe("deterministic matching engine", () => {
     const result = scoreMatch(client, oneSided);
     expect(result.forwardFit).toBeGreaterThan(0);
     expect(result.reverseFit).toBeLessThan(result.forwardFit);
-    expect(result.components).toHaveLength(7);
+    expect(result.components).toHaveLength(8);
     expect(result.positiveReasons.every((reason) => reason.length > 0)).toBe(true);
   });
 
@@ -54,29 +54,68 @@ describe("deterministic matching engine", () => {
     expect(result.components.reduce((sum, part) => sum + part.weight, 0)).toBe(100);
   });
 
-  it("makes the assessment gender heuristics opt-in and visible", () => {
-    const heuristicClient = {
+  it("applies assessment signals by default and exposes them as a real component", () => {
+    const heuristicClient: Profile = {
       ...client,
+      gender: "man",
       dateOfBirth: "1990-01-01",
       heightCm: 180,
-      incomeBand: "₹40–60 LPA",
+      annualIncomeInr: 4_000_000,
       preferences: { ...client.preferences, ageMin: null, ageMax: null, heightMinCm: null, heightMaxCm: null },
     };
-    const heuristicCandidate = { ...candidate, dateOfBirth: "1995-01-01", heightCm: 160, incomeBand: "₹10–15 LPA" };
-    expect(scoreMatch(heuristicClient, heuristicCandidate).assessmentBonus).toBe(0);
-    const demoResult = scoreMatch(heuristicClient, heuristicCandidate, { assessmentDemoMode: true });
-    expect(demoResult.assessmentBonus).toBeGreaterThan(0);
-    expect(demoResult.assessmentBonus).toBeLessThanOrEqual(6);
-    expect(demoResult.assessmentReasons.length).toBeGreaterThan(0);
+    const heuristicCandidate: Profile = {
+      ...candidate,
+      gender: "woman",
+      dateOfBirth: "1995-01-01",
+      heightCm: 160,
+      annualIncomeInr: 1_000_000,
+    };
+    const result = scoreMatch(heuristicClient, heuristicCandidate);
+    expect(result.assessmentSignals).not.toBeNull();
+    expect(result.assessmentSignals!).toBeGreaterThan(50);
+    expect(result.assessmentReasons.length).toBeGreaterThan(0);
+    expect(result.assessmentReasons.join(" ")).toContain("not a customer-stated preference");
+    expect(result.components.find((component) => component.key === "assessmentSignals")?.applicable).toBe(true);
   });
 
-  it("only adds female-client demo emphasis when compatibility is present", () => {
-    const womanClient = { ...client, gender: "woman" as const, profession: "Product designer", values: ["Kindness", "Curiosity"], lifestyle: ["Non-smoker"], relocation: "Open to relocate" as const };
-    const manCandidate = { ...candidate, gender: "man" as const, profession: "Product designer", values: ["Kindness", "Curiosity"], lifestyle: ["Non-smoker"], relocation: "Open to relocate" as const };
-    const result = scoreMatch(womanClient, manCandidate, { assessmentDemoMode: true });
-    expect(result.assessmentBonus).toBeLessThanOrEqual(4);
-    expect(result.assessmentReasons.some((reason) => reason.includes("career-compatibility"))).toBe(true);
-    expect(result.assessmentReasons.some((reason) => reason.includes("shared-values"))).toBe(true);
+  it("lets an explicit preference suppress the matching assessment signal", () => {
+    const heuristicClient: Profile = {
+      ...client,
+      gender: "man",
+      dateOfBirth: "1990-01-01",
+      heightCm: 180,
+      annualIncomeInr: 4_000_000,
+      preferences: { ...client.preferences, ageMin: 24, ageMax: 34, heightMinCm: 150, heightMaxCm: 175 },
+    };
+    const result = scoreMatch(heuristicClient, { ...candidate, gender: "woman", dateOfBirth: "1995-01-01", heightCm: 160, annualIncomeInr: 1_000_000 });
+    expect(result.assessmentReasons.join(" ")).not.toContain("Age direction");
+    expect(result.assessmentReasons.join(" ")).not.toContain("Height direction");
+  });
+
+  it("can disable the assessment signals, which then drop out of the score", () => {
+    const withSignals = scoreMatch(client, candidate);
+    const withoutSignals = scoreMatch(client, candidate, { assessmentDemoMode: false });
+    expect(withSignals.assessmentSignals).not.toBeNull();
+    expect(withoutSignals.assessmentSignals).toBeNull();
+    expect(withoutSignals.components.find((component) => component.key === "assessmentSignals")?.applicable).toBe(false);
+    expect(withoutSignals.components.filter((component) => component.applicable)).toHaveLength(7);
+  });
+
+  it("keeps the brief's relative weights for customers without assessment signals", () => {
+    const womanClient: Profile = { ...client, gender: "woman" };
+    const manCandidate: Profile = { ...candidate, gender: "man" };
+    const result = scoreMatch(womanClient, manCandidate);
+    expect(result.assessmentSignals).toBeNull();
+    const active = result.components.filter((component) => component.applicable);
+    expect(active).toHaveLength(7);
+    expect(active.reduce((sum, component) => sum + component.weight, 0)).toBe(90);
+    // Renormalised shares reproduce 30/20/15/10/10/10/5.
+    expect((active.find((component) => component.key === "mutualPreferenceFit")!.weight / 90) * 100).toBeCloseTo(30);
+    expect((active.find((component) => component.key === "valuesAndIntentions")!.weight / 90) * 100).toBeCloseTo(20);
+  });
+
+  it("uses the full 100-point weight table", () => {
+    expect(Object.values(SCORE_WEIGHTS).reduce((sum, weight) => sum + weight, 0)).toBe(100);
   });
 
   it("handles missing, malformed, impossible, future, and valid dates of birth safely", () => {
@@ -93,7 +132,7 @@ describe("deterministic matching engine", () => {
     const sent = { customerId: client.id, candidateId: candidate.id, status: "sent" as const, updatedAt: "2026-10-01T00:00:00.000Z" };
     expect(checkEligibility(permissiveClient, permissiveCandidate, { interactions: [sent] }).eligible).toBe(false);
     expect(checkEligibility(permissiveClient, permissiveCandidate, { interactions: [sent], showPreviouslyContacted: true }).eligible).toBe(true);
-    const ranked = rankMatches(permissiveClient, seeded.profiles.filter((profile) => !profile.assigned).map((profile) => withPrefs(profile, { strict: [] })), { interactions: [sent] });
+    const ranked = rankMatches(permissiveClient, seeded.profiles.filter((profile) => profile.assignedMatchmakerId === null).map((profile) => withPrefs(profile, { strict: [] })), { interactions: [sent] });
     expect(ranked.some((match) => match.candidateId === candidate.id)).toBe(false);
     expect(ranked.map((match) => match.overallScore)).toEqual([...ranked.map((match) => match.overallScore)].sort((a, b) => b - a));
   });

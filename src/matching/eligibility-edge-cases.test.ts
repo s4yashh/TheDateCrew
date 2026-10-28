@@ -31,15 +31,15 @@ describe("matching eligibility edge cases", () => {
     expect(checkEligibility(owner, { ...target, maritalStatus: null }).eligible).toBe(true);
   });
 
-  it("treats an open-to-children answer as compatible with a strict children preference", () => {
-    const { owner, target } = pair({ childrenPreference: "Want children", strict: ["childrenPreference"] }, { childrenPreference: "Do not want children" });
+  it("treats a Maybe children answer as compatible with a strict children preference", () => {
+    const { owner, target } = pair({ childrenPreference: "Yes", strict: ["childrenPreference"] }, { childrenPreference: "No" });
     expect(checkEligibility(owner, target).eligible).toBe(false);
-    expect(checkEligibility(owner, { ...target, childrenPreference: "Open to children" }).eligible).toBe(true);
+    expect(checkEligibility(owner, { ...target, childrenPreference: "Maybe" }).eligible).toBe(true);
     expect(checkEligibility(owner, { ...target, childrenPreference: null }).eligible).toBe(true);
   });
 
   it("keeps relocation unknown distinct from an explicit strict conflict", () => {
-    const { owner, target } = pair({ relocation: "Not open to relocate", strict: ["relocation"] }, { relocation: "Open to relocate" });
+    const { owner, target } = pair({ relocation: "Yes", strict: ["relocation"] }, { relocation: "No" });
     expect(checkEligibility(owner, target).eligible).toBe(false);
     expect(checkEligibility(owner, { ...target, relocation: null }).eligible).toBe(true);
   });
@@ -87,7 +87,7 @@ describe("matching eligibility edge cases", () => {
 
   it("returns the algorithm version and a bounded component breakdown", () => {
     const result = scoreMatch(customer, candidate);
-    expect(result.algorithmVersion).toBe("mutual-fit-v1.0");
+    expect(result.algorithmVersion).toBe("mutual-fit-v2.0");
     expect(result.components.every((component) => component.score >= 0 && component.score <= 100)).toBe(true);
     expect(result.overallScore).toBeGreaterThanOrEqual(0);
     expect(result.overallScore).toBeLessThanOrEqual(100);
