@@ -6,7 +6,7 @@ import { ArrowRight, HeartHandshake, LockKeyhole } from "lucide-react";
 
 export function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("matchmaker@thedatecrew.demo");
+  const [email, setEmail] = useState("maya@thedatecrew.demo");
   const [password, setPassword] = useState("DemoMatch123!");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -51,7 +51,11 @@ export function LoginForm() {
         </form>
         <div className="demo-credential-box">
           <span className="demo-dot" />
-          <div><strong>Demo account</strong><span>Credentials are prefilled for your walkthrough.</span></div>
+          <div>
+            <strong>Two demo matchmakers</strong>
+            <span>Maya Shah · maya@thedatecrew.demo / DemoMatch123!</span>
+            <span>Arjun Rao · arjun@thedatecrew.demo / ArjunMatch123!</span>
+          </div>
         </div>
         <p className="login-privacy">This private demo uses synthetic sample data. No messages or emails are sent.</p>
       </section>
