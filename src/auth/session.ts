@@ -6,6 +6,7 @@ const SESSION_TTL_SECONDS = 8 * 60 * 60;
 const LOCAL_DEVELOPMENT_SECRET = "local-demo-secret-change-before-deployment";
 
 interface SessionPayload {
+  matchmakerId: string;
   email: string;
   expiresAt: number;
 }
@@ -28,8 +29,8 @@ function safeCompare(left: string, right: string): boolean {
   return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
 }
 
-export function createSessionToken(email: string, now = Date.now()): string {
-  const payload: SessionPayload = { email, expiresAt: Math.floor(now / 1000) + SESSION_TTL_SECONDS };
+export function createSessionToken(matchmakerId: string, email: string, now = Date.now()): string {
+  const payload: SessionPayload = { matchmakerId, email, expiresAt: Math.floor(now / 1000) + SESSION_TTL_SECONDS };
   const encodedPayload = Buffer.from(JSON.stringify(payload)).toString("base64url");
   return `${encodedPayload}.${signature(encodedPayload)}`;
 }
@@ -41,9 +42,9 @@ export function verifySessionToken(token: string | undefined, now = Date.now()):
   if (!safeCompare(signature(encodedPayload), providedSignature)) return null;
   try {
     const payload = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8")) as Partial<SessionPayload>;
-    if (typeof payload.email !== "string" || typeof payload.expiresAt !== "number") return null;
+    if (typeof payload.matchmakerId !== "string" || typeof payload.email !== "string" || typeof payload.expiresAt !== "number") return null;
     if (payload.expiresAt <= Math.floor(now / 1000)) return null;
-    return { email: payload.email, expiresAt: payload.expiresAt };
+    return { matchmakerId: payload.matchmakerId, email: payload.email, expiresAt: payload.expiresAt };
   } catch {
     return null;
   }
@@ -58,18 +59,6 @@ export function getRequestSession(request: Request): SessionPayload | null {
 export async function getServerSession(): Promise<SessionPayload | null> {
   const cookieJar = await cookies();
   return verifySessionToken(cookieJar.get(SESSION_COOKIE)?.value);
-}
-
-export function getDemoCredentials() {
-  return {
-    email: process.env.DEMO_LOGIN_EMAIL || "matchmaker@thedatecrew.demo",
-    password: process.env.DEMO_LOGIN_PASSWORD || "DemoMatch123!",
-  };
-}
-
-export function verifyDemoCredentials(email: string, password: string): boolean {
-  const expected = getDemoCredentials();
-  return safeCompare(email.trim().toLowerCase(), expected.email.toLowerCase()) && safeCompare(password, expected.password);
 }
 
 interface LoginAttemptState {

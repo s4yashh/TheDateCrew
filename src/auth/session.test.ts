@@ -1,27 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { createSessionToken, getDemoCredentials, recordLoginAttempt, resetLoginAttempts, verifyDemoCredentials, verifySessionToken } from "@/auth/session";
+import { createSessionToken, recordLoginAttempt, resetLoginAttempts, verifySessionToken } from "@/auth/session";
 
 describe("signed matchmaker demo sessions", () => {
   it("accepts a valid, unexpired signed cookie payload", () => {
     const issuedAt = Date.UTC(2026, 9, 13, 9);
-    const token = createSessionToken("matchmaker@thedatecrew.demo", issuedAt);
-    expect(verifySessionToken(token, issuedAt + 60_000)?.email).toBe("matchmaker@thedatecrew.demo");
+    const token = createSessionToken("mm-001", "maya@thedatecrew.demo", issuedAt);
+    const session = verifySessionToken(token, issuedAt + 60_000);
+    expect(session?.matchmakerId).toBe("mm-001");
+    expect(session?.email).toBe("maya@thedatecrew.demo");
   });
 
   it("rejects expired, tampered, and malformed tokens", () => {
     const issuedAt = Date.UTC(2026, 9, 13, 9);
-    const token = createSessionToken("matchmaker@thedatecrew.demo", issuedAt);
+    const token = createSessionToken("mm-001", "maya@thedatecrew.demo", issuedAt);
     expect(verifySessionToken(token, issuedAt + 9 * 60 * 60 * 1000)).toBeNull();
     expect(verifySessionToken(`${token}tampered`, issuedAt)).toBeNull();
     expect(verifySessionToken("not-a-session", issuedAt)).toBeNull();
     expect(verifySessionToken(undefined, issuedAt)).toBeNull();
   });
 
-  it("compares demo credentials without leaking values in a session token", () => {
-    const credentials = getDemoCredentials();
-    expect(verifyDemoCredentials(credentials.email, credentials.password)).toBe(true);
-    expect(verifyDemoCredentials(credentials.email, `${credentials.password}wrong`)).toBe(false);
-    expect(createSessionToken(credentials.email)).not.toContain(credentials.password);
+  it("never embeds a password in the token", () => {
+    expect(createSessionToken("mm-001", "maya@thedatecrew.demo")).not.toContain("DemoMatch123!");
   });
 
   it("rate limits repeated login failures and resets after a successful login", () => {
