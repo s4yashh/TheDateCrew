@@ -1,17 +1,46 @@
 # Handoff — The Date Crew Matchmaker OS
 
-## Initial plan
-
-Workspace inspection found only `luna_matchmaker_os_master_prompt.md`; there was no existing application or Git repository. The implementation uses Next.js App Router + TypeScript, Zod, Vitest, local JSON persistence for the unconfigured database environment, signed demo sessions, and a deterministic two-way matcher. No external photos or real profile data are used. Markdown deliverables are present locally but excluded from Git at the user's request.
-
 ## Current state
 
-- Product: responsive matchmaker workspace with login, overview, searchable/filterable/sortable customer directory, detailed biodata, journey updates, notes/activity, ranked matches, score explanations, shortlist/dismiss/restore, reviewed mock send, sent outbox, and settings.
-- Seed: 12 assigned customers and 120 reproducible fictional candidate profiles; the opposite-gender assessment pool is balanced and includes a curated low-fit example.
-- Auth: demo login via HMAC-signed HTTP-only/SameSite cookie, server-verified protected APIs, and an in-memory basic login throttle.
-- Persistence: local atomic JSON file at `.data/demo-store.json`. Run `npm run seed` to restore the initial demo. It is suitable for this single-process local demo only.
-- AI: optional OpenAI structured-output draft through a server-only service; fallback template is active if no API key is configured. No real email provider is connected.
-- Research and assessment write-up: `docs/research.md`, `docs/algorithm.md`, `docs/architecture.md`, `docs/demo-script.md`, `docs/matching-logic-submission.md`, and `docs/submission-checklist.md`.
+The workspace is a working Next.js 16 App Router application with:
+
+- Two demo matchmakers (Maya Shah, Arjun Rao), each owning six customers.
+  Passwords are stored as scrypt hashes; sessions are HMAC-signed HTTP-only
+  cookies carrying the matchmaker ID.
+- 12 assigned customers and 200 fictional candidates (100 women, 100 men), so
+  every customer has at least 100 opposite-gender profiles.
+- Customer directory with search, filters, sorting, and pagination; full
+  biodata grouped into personal, career, family, lifestyle, matchmaking, and
+  partner-preference sections.
+- Journey stages, dated notes authored by the signed-in matchmaker, activity
+  timelines, shortlist/dismiss/restore, and a simulated introductions outbox.
+- Deterministic two-stage matching engine with mutual preference fit,
+  component weights, unknown-data handling, fit labels, and grounded reasons.
+- Assessment signals are a visible 10% component, enabled by default, and
+  suppressed by explicit preferences.
+- Two Gemini features: introduction drafts and "why this match" explanations,
+  both with a labelled deterministic fallback.
+- Persistence through one repository contract: Neon Postgres (`jsonb` snapshot)
+  in production, atomic JSON file locally.
+- Settings and error/empty/loading states; responsive shell.
+
+## Key decisions
+
+- **Deterministic score, AI as a writing assist.** Gemini never computes or
+  changes a score; both AI routes recompute the pair server-side.
+- **Assessment signals are real scoring, not a bonus.** They are 10% of the
+  score, visible per match, capped, and skipped when an explicit preference
+  exists. With them off, the remaining weights renormalise to the brief's
+  30/20/15/10/10/10/5.
+- **Yes / Maybe / No everywhere.** Children, pets, and relocation use the same
+  three-state model. `Maybe` is compatible, not a missing value.
+- **Numeric income.** Annual INR figures replaced band strings, so relative
+  income comparisons are exact and the UI can format LPA consistently.
+- **One `jsonb` row, not Prisma.** Fastest free path to durable storage on
+  Vercel. The repository contract is deliberately small so normalised tables can
+  replace it later.
+- **Server-side ownership.** Every route scopes reads and writes by
+  `assignedMatchmakerId`; the client never filters for security.
 
 ## Commands and credentials
 
@@ -24,24 +53,49 @@ npm test
 npm run lint
 npm run typecheck
 npm run build
+npm run ai:smoke   # requires GEMINI_API_KEY
 ```
 
-Demo login: `matchmaker@thedatecrew.demo` / `DemoMatch123!`.
+| Matchmaker | Email | Password |
+|---|---|---|
+| Maya Shah | `maya@thedatecrew.demo` | `DemoMatch123!` |
+| Arjun Rao | `arjun@thedatecrew.demo` | `ArjunMatch123!` |
 
 ## Verification
 
-- `npm test`: 95 tests pass, covering scoring, 55 eligibility scenarios, unknown fields, mutual preference direction, optional heuristic behavior, ranking/excluded pairs, seeded profiles, action persistence, session expiry/rate limiting, and AI fallback/validation.
+- `npm test`: **125 tests passing across 13 files**.
 - `npm run lint`: pass.
 - `npm run typecheck`: pass.
-- `npm run build`: pass (Next.js production build).
-- `npm audit`: 0 vulnerabilities after replacing the vulnerable legacy Next lint-config dependency with TypeScript ESLint and React Hooks rules.
-- API smoke test: unauthenticated workspace denied; demo login, authenticated workspace retrieval, grounded fallback draft, note persistence, mock send/outbox persistence, duplicate-send prevention, and logout all exercised successfully.
-- Browser pane was unavailable in this session, so a visual browser walkthrough was not performed.
+- `npm run build`: pass on Next.js 16.4.3 (the 16.4.0 security advisory is
+  resolved).
+- Live smoke test on a production build:
+  - both demo logins succeed and return the correct matchmaker;
+  - Maya sees 6 customers + 200 candidates, Arjun sees 6 + 200;
+  - Maya's note against Arjun's customer is rejected with HTTP 400;
+  - a note is attributed to Maya Shah;
+  - Gemini intro and explanation return `source: gemini`;
+  - a send creates `Sent (Demo)` and a duplicate send is rejected;
+  - notes and the outbox survive a full process restart;
+  - `npm run seed` restores the clean demo.
 
-## Remaining limits / next concrete steps
+## Not yet verified
 
-1. Replace local JSON persistence with PostgreSQL/Prisma or a durable repository before multi-user/serverless deployment; database credentials were not provided.
-2. Set a production `SESSION_SECRET`, replace demo credentials with real user management, distributed login throttling, and production security reviews before exposing the app publicly.
-3. Configure `OPENAI_API_KEY` only if desired; otherwise the template fallback is fully usable. No email provider is configured.
-4. Deploy only after durable persistence is available; no live URL is claimed.
-5. Git history contains 104 incremental commits; `main` was pushed successfully to `git@github.com:s4yashh/TheDateCrew.git`. No live URL is deployed. Deploy only after adding durable persistence and production authentication. Markdown documentation, `node_modules`, `.data`, secrets, and generated build output are ignored from Git by request.
+- The Neon adapter has **not** been integration-tested against a live database
+  because `DATABASE_URL` was not available in this session. It compiles, the
+  file adapter is fully tested, and the SQL is limited to create/select/upsert.
+  Run `npm run seed` with `DATABASE_URL` set and exercise a note + send before
+  trusting the deployment.
+- No Vercel deployment has been performed. The repository is ready to import;
+  see the README for the exact environment variables.
+- No browser walkthrough was performed in this session (the browser pane was
+  unavailable); behaviour was verified through the production build and API.
+
+## Next steps
+
+1. Create the free Neon project and add `DATABASE_URL`, `SESSION_SECRET`, and
+   `GEMINI_API_KEY` in Vercel.
+2. Import the repository, deploy, and verify login → match → shortlist → send →
+   reload → data still present.
+3. Run `npm run seed` once against the deployed database if a clean demo is
+   preferred.
+4. Update `docs/submission-checklist.md` with the live URL.
