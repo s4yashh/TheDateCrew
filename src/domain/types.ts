@@ -1,3 +1,11 @@
+/**
+ * Shared domain model for the matchmaker workspace.
+ *
+ * The brief asks for explicitly recorded facts and preferences. Anything the
+ * matchmaker has not recorded stays `null` so the scorer can treat it as
+ * unknown instead of inventing a negative answer.
+ */
+
 export const JOURNEY_STAGES = [
   "New Lead",
   "Onboarding",
@@ -15,9 +23,19 @@ export type JourneyStage = (typeof JOURNEY_STAGES)[number];
 export type Gender = "woman" | "man" | "nonbinary";
 export type MaritalStatus = "Never married" | "Divorced" | "Widowed";
 export type VerificationState = "Verified" | "Pending" | "Unverified";
-export type ChildrenPreference = "Want children" | "Do not want children" | "Open to children" | "Has children";
 export type NoteType = "Call" | "Meeting" | "General" | "Follow-up";
 export type InteractionStatus = "shortlisted" | "dismissed" | "sent";
+
+/**
+ * The three-state answer used for children, pets, and relocation.
+ *
+ * The assessment specifies Yes / No / Maybe rather than free text or
+ * multi-value lists, which keeps the comparison honest: "Maybe" is a real
+ * answer, not a missing value.
+ */
+export type TriState = "Yes" | "Maybe" | "No";
+
+export const TRI_STATES: readonly TriState[] = ["Yes", "Maybe", "No"];
 
 export interface PartnerPreferences {
   ageMin: number | null;
@@ -29,8 +47,9 @@ export interface PartnerPreferences {
   professions: string[];
   education: string[];
   languages: string[];
-  childrenPreference: ChildrenPreference | null;
-  relocation: "Open to relocate" | "Not open to relocate" | null;
+  childrenPreference: TriState | null;
+  relocation: TriState | null;
+  petsPreference: TriState | null;
   relationshipTimeline: string | null;
   values: string[];
   interests: string[];
@@ -57,17 +76,19 @@ export interface Profile {
   company: string | null;
   designation: string | null;
   profession: string | null;
-  incomeBand: string | null;
+  /** Annual income in INR. Numeric so relative-income comparisons are exact. */
+  annualIncomeInr: number | null;
   siblings: number | null;
   familyStructure: string | null;
   religion: string | null;
-  community: string | null;
+  /** Caste or community, only ever supplied explicitly by the fictional profile. */
+  caste: string | null;
   motherTongue: string | null;
   familyLocation: string | null;
   familyValues: string | null;
-  childrenPreference: ChildrenPreference | null;
-  relocation: "Open to relocate" | "Not open to relocate" | null;
-  petsPreference: string | null;
+  childrenPreference: TriState | null;
+  relocation: TriState | null;
+  petsPreference: TriState | null;
   smokingPreference: string | null;
   drinkingPreference: string | null;
   lifestyle: string[];
@@ -79,7 +100,12 @@ export interface Profile {
   consent: "Consented to demo" | "Pending";
   stage: JourneyStage;
   preferences: PartnerPreferences;
-  assigned: boolean;
+  /**
+   * Owning matchmaker. `null` marks a candidate in the shared pool; a value
+   * marks an assigned customer. Replaces the previous `assigned` boolean so
+   * ownership is real data rather than a hardcoded name.
+   */
+  assignedMatchmakerId: string | null;
   profileCompleteness: number;
   lastActivityAt: string;
   prompt: string | null;
@@ -120,12 +146,46 @@ export interface Introduction {
   createdAt: string;
 }
 
+/**
+ * A matchmaker account. Passwords are stored as scrypt hashes with a per-account
+ * salt; the demo seed uses fixed salts so the dataset stays reproducible.
+ */
+export interface Matchmaker {
+  id: string;
+  name: string;
+  initials: string;
+  email: string;
+  passwordHash: string;
+  passwordSalt: string;
+}
+
 export interface DemoStore {
+  matchmakers: Matchmaker[];
   profiles: Profile[];
   interactions: MatchInteraction[];
   notes: MatchNote[];
   activities: ActivityEvent[];
   introductions: Introduction[];
+}
+
+/** A customer is a profile owned by a matchmaker; candidates have no owner. */
+export function isClient(profile: Pick<Profile, "assignedMatchmakerId">): boolean {
+  return profile.assignedMatchmakerId !== null;
+}
+
+export function isCandidate(profile: Pick<Profile, "assignedMatchmakerId">): boolean {
+  return profile.assignedMatchmakerId === null;
+}
+
+export function isAssignedTo(profile: Pick<Profile, "assignedMatchmakerId">, matchmakerId: string): boolean {
+  return profile.assignedMatchmakerId === matchmakerId;
+}
+
+/** Format a numeric annual income as Indian lakhs per annum. */
+export function formatIncome(annualIncomeInr: number | null): string | null {
+  if (annualIncomeInr === null) return null;
+  const lakhs = annualIncomeInr / 100_000;
+  return `₹${Number.isInteger(lakhs) ? lakhs : lakhs.toFixed(1)} LPA`;
 }
 
 export function getAge(dateOfBirth: string | null, now = new Date()): number | null {
