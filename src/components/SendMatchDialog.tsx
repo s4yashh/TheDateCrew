@@ -10,7 +10,7 @@ import type { MatchResult } from "@/matching/scoring";
 
 interface DraftResponse {
   introText: string;
-  source: "openai" | "template";
+  source: "gemini" | "template";
   label: string;
   fallbackReason?: string;
 }
@@ -64,7 +64,7 @@ export function SendMatchDialog({ customer, candidate, match, onClose, onConfirm
   const age = getAge(candidate.dateOfBirth);
   return <Modal title="Review this introduction" eyebrow="HUMAN REVIEW BEFORE SEND" onClose={onClose} size="lg">
     <div className="send-dialog-body">
-      <div className="send-dialog-alert"><Mail size={16} /><div><strong>Simulated introduction</strong><span>This creates a local outbox record only. No email will be sent.</span></div><span className="demo-pill">DEMO</span></div>
+      <div className="send-dialog-alert"><Mail size={16} /><div><strong>Simulated introduction</strong><span>This creates a private outbox record only. No email will be sent.</span></div><span className="demo-pill">DEMO</span></div>
       <div className="send-summary-grid"><div className="send-recipient"><span className="form-eyebrow">PROPOSED RECIPIENT</span><strong>{recipient}</strong><small>Customer’s synthetic demo email</small></div>
         <div className="send-score-summary"><span className="form-eyebrow">MATCH SIGNAL</span><strong>{match.overallScore}<small>%</small></strong><span>{match.fitLabel} · {match.mutual ? "Mutual fit" : "One-sided fit"}</span></div></div>
       <div className="send-profile-summary"><div><Avatar profile={candidate} /><span><strong>{profileName(candidate)}</strong><small>{age === null ? "Age not provided" : `${age} years`} · {candidate.city || "City not provided"}</small><small>{candidate.profession || "Profession not provided"} {candidate.designation ? `· ${candidate.designation}` : ""}</small></span></div><span className="send-for-label">INTRODUCTION FOR<br /><strong>{profileName(customer)}</strong></span></div>

@@ -21,7 +21,7 @@ export function Introductions({ store }: { store: DemoStore }) {
     <section className="page-heading-row"><div><p className="eyebrow">THE OUTBOX <span className="eyebrow-divider">/</span> SIMULATED ONLY</p><h1>Sent introductions<span className="title-period">.</span></h1><p className="welcome-subtitle">A quiet record of connections you’ve chosen to make.</p></div>
       <div className="directory-total"><span className="metric-icon"><Mail size={17} /></span><div><strong>{store.introductions.length.toString().padStart(2, "0")}</strong><small>demo introductions</small></div></div>
     </section>
-    <div className="outbox-alert"><ShieldCheck size={16} /><div><strong>Nothing leaves this workspace.</strong><span>Every message is simulated and stored only in the local demo outbox. No email provider is connected.</span></div></div>
+    <div className="outbox-alert"><ShieldCheck size={16} /><div><strong>Nothing leaves this workspace.</strong><span>Every message is simulated and stored only in the demo outbox. No email provider is connected.</span></div></div>
     <section className="panel outbox-panel">
       <div className="outbox-toolbar"><div><p className="eyebrow">INTRODUCTION HISTORY</p><h2>{introductions.length} {introductions.length === 1 ? "record" : "records"}</h2></div>
         <label className="search-field"><Search size={15} /><input aria-label="Search introductions" placeholder="Search a name…" value={search} onChange={(event) => setSearch(event.target.value)} /></label>
@@ -52,7 +52,7 @@ function IntroductionDetails({ introduction, store, onClose }: { introduction: I
       <div className="introduction-recipient"><small>PROPOSED RECIPIENT</small><strong>{introduction.recipient}</strong><span>Synthetic demo address · no message was sent</span></div>
       <div className="introduction-pair-card">{customer && <div><Avatar profile={customer} /><span><strong>{profileName(customer)}</strong><small>Assigned customer</small></span></div>}<ArrowUpRight size={17} />{candidate && <div><Avatar profile={candidate} /><span><strong>{profileName(candidate)}</strong><small>{candidate.profession || "Profession not provided"} · {candidate.city || "Location not provided"}</small></span></div>}</div>
       <div className="introduction-message"><div><span>MESSAGE DRAFT</span><span>Human reviewed</span></div><p>{introduction.introText}</p></div>
-      <p className="detail-privacy-note"><ShieldCheck size={13} /> This record is local demo data. No real email service is configured.</p>
+      <p className="detail-privacy-note"><ShieldCheck size={13} /> This record is private demo data. No real email service is configured.</p>
     </div>
   </Modal>;
 }

@@ -18,7 +18,7 @@ export function Customers({ profiles, onOpen }: { profiles: Profile[]; onOpen: (
   const [verification, setVerification] = useState("All verification");
   const [sort, setSort] = useState<SortKey>("activity");
   const [page, setPage] = useState(1);
-  const clients = profiles.filter((profile) => profile.assigned);
+  const clients = profiles.filter((profile) => profile.assignedMatchmakerId !== null);
   const stages = Array.from(new Set(clients.map((profile) => profile.stage))).sort();
   const cities = Array.from(new Set(clients.map((profile) => profile.city).filter((value): value is string => Boolean(value)))).sort();
   const hasFilters = search || stage !== "All stages" || city !== "All cities" || maritalStatus !== "All statuses" || gender !== "All genders" || verification !== "All verification";

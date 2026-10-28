@@ -268,7 +268,7 @@ export function createSeedStore(): DemoStore {
   const notes = [
     { id: "seed-note-1", profileId: clients[0].id, author: "Maya Shah", type: "Call" as const, text: "Enjoyed our conversation. Looking for someone curious, kind, and open to building a life in Bengaluru.", createdAt: "2026-10-12T10:00:00.000Z" },
     { id: "seed-note-2", profileId: clients[2].id, author: "Maya Shah", type: "Meeting" as const, text: "Reviewed profile together. They would like introductions to feel intentional and low-pressure.", createdAt: "2026-10-10T11:30:00.000Z" },
-    { id: "seed-note-3", profileId: clients[8].id, author: "Arjun Rao", type: "Follow-up" as const, text: "Asked us to prioritize shared values and communication style over a narrow city preference.", createdAt: "2026-10-09T09:15:00.000Z" },
+    { id: "seed-note-3", profileId: clients[9].id, author: "Arjun Rao", type: "Follow-up" as const, text: "Asked us to prioritize shared values and communication style over a narrow city preference.", createdAt: "2026-10-09T09:15:00.000Z" },
   ];
   const activities: ActivityEvent[] = [
     event("seed-event-1", clients[0].id, "stage", "Profile moved to Matchmaking", 0),
