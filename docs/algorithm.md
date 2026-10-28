@@ -1,45 +1,103 @@
 # Matching algorithm
 
-Algorithm version: `mutual-fit-v1.0`. The score is a decision-support signal for a human matchmaker, not a prediction of relationship success. Scoring and eligibility live in `src/matching/scoring.ts` and are unit tested independently of React.
+Algorithm version: `mutual-fit-v2.0`. The score is a decision-support signal for
+a human matchmaker, not a prediction of relationship success. Eligibility and
+scoring are isolated in `src/matching/` and unit-tested without React.
 
 ## Stage A — eligibility
 
-- Reject the same profile ID or records that have the same name and date of birth.
-- Assessment demo policy currently requires opposite-gender pairs. This rule is isolated in `checkEligibility` so a future product can replace it with customer-configured orientation and partner-gender preferences. This assessment demo does not implement that broader model.
-- Exclude a per-customer dismissed or already-sent pair from new recommendations. The UI offers separate previous-sent and dismissed views; explicit “show previously contacted” scoring can be requested without permitting a duplicate send.
-- Evaluate each customer’s and candidate’s strict preferences symmetrically: age, height, city, marital status, children preference, and relocation. Only a preference marked `strict` can reject a pair.
-- Unknown/missing values do not fail a hard rule. They remain unknown, appear as a trade-off, and incur a bounded uncertainty deduction in score.
+- Reject the same profile ID, or records with the same name and date of birth.
+- The assessment demo requires opposite-gender pairs. This policy is isolated
+  in `checkEligibility` so it can later be replaced by customer-configured
+  orientation preferences.
+- Exclude a per-customer dismissed or already-sent pair from new
+  recommendations. Separate views expose previously sent and dismissed
+  profiles, and scoring can request previously contacted pairs without allowing
+  a duplicate send.
+- Evaluate strict preferences symmetrically in both directions: age, height,
+  city, marital status, children preference, and relocation. Only a preference
+  the customer marked `strict` can reject a pair.
+- Missing values never fail a hard rule. They stay unknown, appear as a
+  trade-off, and add to the uncertainty deduction.
+
+### Three-state answers
+
+Children, pets, and relocation are `Yes | Maybe | No`:
+
+- **Strict children rule:** `Maybe` on either side is compatible. `Yes` vs `No`
+  is the only hard conflict.
+- **Strict relocation rule:** the preference means "my partner must be open to
+  relocating". Only `Yes` against a candidate's `No` rejects the pair.
+- **Scoring:** identical answers score 100, any `Maybe` scores 70, and
+  `Yes` vs `No` scores 15 (preference fit) or 25 (profile-to-profile).
 
 ## Stage B — weighted score
 
-Each component is normalized to 0–100. The score is the weighted component sum, less a capped uncertainty deduction, plus an optional capped assessment demo adjustment:
+Each component is normalised to 0–100. The score is the weighted sum, less a
+capped uncertainty deduction:
 
 | Component | Weight |
 | --- | ---: |
-| Mutual partner-preference fit (forward + reverse) | 30% |
-| Values and relationship intentions | 20% |
-| Children and family plans | 15% |
-| Career, education, and lifestyle | 10% |
-| Location and relocation | 10% |
-| Languages and interests | 10% |
-| Profile completeness and verification confidence | 5% |
+| Mutual partner-preference fit (forward + reverse) | 27% |
+| Values and relationship intentions | 18% |
+| Children and family plans | 14% |
+| Career, education, and lifestyle | 9% |
+| Location and relocation | 9% |
+| Languages and interests | 9% |
+| Profile completeness and verification confidence | 4% |
+| Assessment signals (gender-specific demo rules) | 10% |
 
-Forward fit checks the customer’s recorded partner preferences against the candidate. Reverse fit checks the candidate’s recorded preferences against the customer. Their mean is the preference component; `mutual` is true when both directional fits are at least 65. The component weights are centralized in `SCORE_WEIGHTS` and sum to 100.
+The weights are centralised in `SCORE_WEIGHTS` and sum to 100.
 
-Unknown subdimensions are not assigned a mismatch value. Where no dimensions are known, a neutral 50 is used for the component; each unknown dimension adds a 0.45-point deduction, capped at 10 points overall. Missing values are also surfaced in “Trade-offs & unknowns.” The confidence component averages profile completeness and modest verified-profile increments and can affect only 5% of the base score.
+**Renormalisation.** Components with no usable data are excluded and the score
+is divided by the weight that actually applies. This prevents a missing
+dimension from silently awarding a neutral 50. When the assessment signals do
+not apply (for example a female customer in this demo), the remaining seven
+dimensions renormalise to exactly the brief's **30 / 20 / 15 / 10 / 10 / 10 / 5**
+proportions.
 
-Fit labels are defined in one place: 82–100 Excellent Potential, 68–81 Strong Potential, 50–67 Consider, and under 50 Low Fit. The demo seed includes a deliberately low-fit example (`candidate-119`) so the system demonstrates a range of outcomes.
+Forward fit checks the customer's recorded preferences against the candidate.
+Reverse fit checks the candidate's preferences against the customer. Their mean
+is the preference component; `mutual` is true when both directional fits are at
+least 65.
 
-## Optional assessment demo mode and fairness
+Unknown subdimensions are not assigned a mismatch value. Each unknown adds a
+0.45-point deduction, capped at 10 points overall, and appears in "Trade-offs &
+unknowns". The confidence component averages profile completeness with modest
+verified-profile increments.
 
-Off by default. It can be enabled from the scoring guide or Settings; that preference is saved locally in the browser. These are assessment-specific, transparent, non-universal assumptions, never eligibility rules:
+Fit labels: 82–100 Excellent Potential, 68–81 Strong Potential, 50–67 Consider,
+under 50 Low Fit. The seed includes a deliberately low-fit example
+(`candidate-119`).
 
-- For a male customer, at most three small signals (younger age direction, shorter relative height, and lower income band) can add at most 6 points, and the age/height signals are skipped when explicit corresponding partner preferences exist.
-- For a female customer, existing career, values, and relocation dimensions get a small capped emphasis only when the observed compatibility for that dimension is at least 70; the combined bonus is capped at 4 points.
-- Children/family alignment is an explicit scored dimension for every gender. Customer-stated preferences remain more important than generic assessment defaults.
+## Assessment signals and fairness
 
-These defaults encode assessment instructions—not evidence-based claims about what men or women want. They can reinforce stereotypes, so they are opt-in, surfaced per match, separately labeled, bounded, and not used in the baseline. Religion, caste/community, and family identity are not scoring inputs. The synthetic seed may contain optional sensitive fields to demonstrate privacy handling, but they are never inferred and never used in the score.
+**Enabled by default.** The toggle in Settings and the scoring guide turns them
+off; the preference is stored per browser. These are assessment-specific
+assumptions, never evidence-based claims about what men or women want, and they
+are never eligibility rules.
+
+- **Male customers:** three directional signals — younger age, shorter height,
+  and lower relative income. Age and height are skipped when the customer has
+  stated an explicit range. Income uses exact annual figures, not bands.
+- **Female customers:** career, values, and relocation are already first-class
+  weighted dimensions applied to every customer, so no duplicate bonus is added.
+- **Children:** alignment is scored for every gender in the family dimension and
+  is never double-counted as an assessment signal.
+- **Explicit preferences win:** a stated age or height range suppresses the
+  matching signal. Strict preferences still run in Stage A.
+- **Bounded:** the component is 10% of the score, and it cannot reject anyone.
+
+These defaults can reinforce stereotypes, so they are visible per match,
+separately labelled, capped, and removable. Religion and caste are optional,
+explicitly recorded, excluded from scoring, and never inferred.
 
 ## Example interpretation
 
-A strong recommendation can have a high overall signal with both forward and reverse fits above 65 and several supported profile overlaps. A one-sided recommendation can still appear with an explanation when hard rules allow it, but it is not labeled mutual. A missing DOB does not fail an age strict rule; the pair remains eligible on that unknown and the explanation asks the matchmaker to confirm the information. A strict known age violation excludes the pair. Shortlist, dismiss, and send actions are not score inputs and are persisted separately.
+A strong recommendation can have a high overall signal with both directional
+fits above 65 and several grounded overlaps. A one-sided recommendation can
+still appear when hard rules allow it, but it is not labelled mutual. A missing
+date of birth does not fail an age rule; the pair stays eligible on that unknown
+and the explanation asks the matchmaker to confirm. A strict known age violation
+excludes the pair. Shortlist, dismiss, and send actions are not score inputs and
+are persisted separately.
