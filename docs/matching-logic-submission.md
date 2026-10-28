@@ -1,7 +1,46 @@
 # Matching logic submission
 
-AI is used only as an optional server-side writing assistant for a matchmaker-reviewed introduction. It receives a minimal set of fictional first names, selected non-sensitive profile context, and the deterministic matcher’s grounded reasons; it returns structured JSON validated with Zod. The draft is editable and labeled before saving. If `OPENAI_API_KEY` is absent, times out, or returns an invalid response, the app uses a deterministic template. AI never calculates a compatibility score, overrides eligibility, or infers a shared interest or value.
+AI is used as an optional server-side writing assistant for two tasks: a
+matchmaker-reviewed introduction draft and a readable explanation of an
+already-computed match. Both use Google Gemini's free tier through a server-only
+module. The model receives a minimal set of fictional, non-sensitive fields and
+the deterministic matcher's grounded reasons and trade-offs; responses are
+structured JSON validated with Zod. Drafts and explanations are clearly
+labelled, editable where relevant, and never change the score. If
+`GEMINI_API_KEY` is absent, rate-limited, rejected, timed out, or returns an
+invalid payload, the app falls back to a deterministic template and shows why.
+AI never calculates compatibility, overrides eligibility, or infers a shared
+interest, religion, or caste.
 
-The matcher is a deterministic two-stage decision-support system. Eligibility first checks identity, the assessment’s opposite-gender demo policy, prior dismissed/sent pairs, and only explicitly strict preferences from both sides. Eligible pairs receive a 0–100 weighted score: mutual partner-preference fit (30%), values and relationship intentions (20%), children/family plans (15%), career/education/lifestyle (10%), location/relocation (10%), languages/interests (10%), and profile confidence (5%). Forward and reverse preference fit are exposed separately, missing details remain unknown with a bounded uncertainty deduction, and explanations only cite known profile facts. The score is not a prediction of relationship success; a human matchmaker decides whether to shortlist, dismiss, or propose an introduction.
+The matcher is a deterministic two-stage decision-support system. Eligibility
+first checks identity, the assessment's opposite-gender demo policy, previously
+dismissed or sent pairs, and only explicitly strict preferences from both
+sides. Eligible pairs receive a 0–100 score across mutual preference fit, values
+and intentions, children and family plans, career/education/lifestyle, location
+and relocation, languages and interests, and profile confidence. Weights live in
+one module and renormalise over the dimensions that actually have data, so a
+missing answer is never silently scored as a neutral value; for customers without
+assessment signals the seven base dimensions restore the brief's
+30/20/15/10/10/10/5 proportions. Children, pets, and relocation use Yes / Maybe /
+No, where "Maybe" is compatible rather than a mismatch. Income is an exact annual
+figure, so relative-income comparisons are numeric rather than band-based.
+Forward and reverse preference fit are exposed separately, missing details incur
+a bounded uncertainty deduction, and written explanations cite only known profile
+facts.
 
-Assumptions are limited to the fictional 12-customer/120-candidate assessment pool, a demo-only opposite-gender eligibility rule, and local JSON persistence because no database credentials were supplied. The requested gender-specific assessment heuristics are opt-in, capped, visible, and subordinate to explicitly stated preferences; they should not be interpreted as universal or evidence-based preferences. Sensitive religion/community details are optional, never inferred, and excluded from scoring. Demo login, data, file persistence, and mock email are not production security or delivery infrastructure.
+The assessment's gender-specific requirement is a visible 10% component enabled
+by default, not a hidden bonus. For male customers it considers age direction,
+relative height, and relative income only when the customer has not stated an
+explicit preference for that field; explicit preferences suppress the matching
+signal and still run as hard filters when marked strict. Children alignment is
+scored for every gender in the family dimension rather than double-counted.
+Female-customer emphasis uses the ordinary career, values, and relocation
+dimensions, which apply to all customers. These are assessment-specific
+assumptions, not evidence-based claims, so they are capped, labelled, explained
+per match, and can be switched off. Assumptions in this submission are the
+fictional 12-customer / 200-candidate pool, the demo-only opposite-gender rule,
+two shared demo accounts, and a single-row Neon `jsonb` snapshot with
+last-write-wins semantics across serverless instances. Demo credentials, data,
+and mock email are not production security or delivery infrastructure. Religion,
+caste, and family identity are optional, explicitly recorded, never inferred, and
+excluded from the score.
