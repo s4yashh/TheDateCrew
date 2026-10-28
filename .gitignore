@@ -9,6 +9,6 @@ build/
 !.env.example
 *.log
 *.tsbuildinfo
-*.md
+.vercel/
 !.gitignore
 !.env.example
