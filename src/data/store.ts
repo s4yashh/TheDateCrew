@@ -1,12 +1,17 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import { createSeedStore } from "@/data/seed";
+import { getRepository } from "@/data/repository";
 import type { DemoStore } from "@/domain/types";
 
-const STORE_DIRECTORY = join(process.cwd(), ".data");
-const STORE_PATH = join(STORE_DIRECTORY, "demo-store.json");
-const TEMP_PATH = join(STORE_DIRECTORY, "demo-store.tmp");
-
+/**
+ * Serialised access to the demo workspace.
+ *
+ * Every mutation runs through an in-process promise queue so two requests in
+ * the same server instance cannot interleave a read-modify-write cycle.
+ * Across serverless instances the snapshot is last-write-wins; that is an
+ * accepted demo trade-off and is called out in docs/architecture.md.
+ *
+ * The whole public surface is `readStore`, `updateStore`, and `resetStore`;
+ * routes and components never know which adapter is active.
+ */
 declare global {
   var demoStoreWriteQueue: Promise<unknown> | undefined;
 }
@@ -18,44 +23,34 @@ function enqueue<T>(work: () => Promise<T>): Promise<T> {
   return operation;
 }
 
-async function readFromDisk(): Promise<DemoStore | null> {
-  try {
-    return JSON.parse(await readFile(STORE_PATH, "utf8")) as DemoStore;
-  } catch (error) {
-    if (error instanceof Error && "code" in error && error.code === "ENOENT") return null;
-    throw error;
-  }
-}
-
-async function persist(store: DemoStore): Promise<void> {
-  await mkdir(STORE_DIRECTORY, { recursive: true });
-  await writeFile(TEMP_PATH, `${JSON.stringify(store, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
-  await rename(TEMP_PATH, STORE_PATH);
-}
-
 export async function readStore(): Promise<DemoStore> {
   return enqueue(async () => {
-    const store = await readFromDisk();
-    if (store) return store;
-    const seeded = createSeedStore();
-    await persist(seeded);
-    return seeded;
+    const repository = getRepository();
+    const existing = await repository.read();
+    if (existing) return existing;
+    // First run: seed and persist so refresh behaves like a real workspace.
+    return repository.reset();
   });
 }
 
 export async function updateStore<T>(update: (store: DemoStore) => T): Promise<{ store: DemoStore; result: T }> {
   return enqueue(async () => {
-    const store = (await readFromDisk()) ?? createSeedStore();
+    const repository = getRepository();
+    const store = (await repository.read()) ?? (await repository.reset());
     const result = update(store);
-    await persist(store);
+    await repository.write(store);
     return { store, result };
   });
 }
 
 export async function resetStore(): Promise<DemoStore> {
   return enqueue(async () => {
-    const seeded = createSeedStore();
-    await persist(seeded);
-    return seeded;
+    const repository = getRepository();
+    return repository.reset();
   });
+}
+
+/** Active persistence mode, shown in Settings and the seed script. */
+export function persistenceMode(): string {
+  return getRepository().describe();
 }
