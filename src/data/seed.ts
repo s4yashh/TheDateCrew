@@ -1,14 +1,27 @@
-import type { ActivityEvent, DemoStore, Gender, JourneyStage, MaritalStatus, PartnerPreferences, Profile } from "@/domain/types";
+import { hashPassword } from "@/auth/password";
+import type {
+  ActivityEvent,
+  DemoStore,
+  Gender,
+  JourneyStage,
+  MaritalStatus,
+  Matchmaker,
+  PartnerPreferences,
+  Profile,
+  TriState,
+} from "@/domain/types";
 
 const FIRST_NAMES = [
   "Aarav", "Aditi", "Aditya", "Ananya", "Arjun", "Avni", "Dev", "Diya", "Ishaan", "Ira",
   "Kabir", "Kiara", "Krish", "Meera", "Neel", "Nisha", "Rohan", "Riya", "Samar", "Tara",
   "Ved", "Zoya", "Ayaan", "Myra", "Reyansh", "Siya", "Vihaan", "Anika", "Vivaan", "Ishita",
-  "Aarohi", "Kian", "Navya", "Rehan", "Sana", "Yash", "Naina", "Om", "Ishaan", "Prisha",
+  "Aarohi", "Kian", "Navya", "Rehan", "Sana", "Yash", "Naina", "Om", "Pranav", "Prisha",
+  "Advait", "Bhavna", "Chirag", "Devika", "Gaurav", "Heena", "Jai", "Kavya", "Laksh", "Mira",
 ];
 const LAST_NAMES = [
   "Mehta", "Rao", "Kapoor", "Iyer", "Shah", "Menon", "Khanna", "Nair", "Bose", "Kulkarni",
   "Reddy", "Sethi", "Desai", "Mukherjee", "Pillai", "Malhotra", "Joshi", "Chatterjee", "Bhat", "Sen",
+  "Verma", "Gupta", "Patel", "Sharma", "Chopra", "Bhatt", "Naidu", "Saxena", "Dutta", "Ghosh",
 ];
 const LOCATIONS = [
   ["Mumbai", "Maharashtra"], ["Bengaluru", "Karnataka"], ["Delhi", "Delhi"], ["Pune", "Maharashtra"],
@@ -24,10 +37,31 @@ const INTERESTS = ["Weekend hikes", "Cooking for friends", "Live music", "Indepe
 const VALUES = ["Kindness", "Curiosity", "Family", "Open communication", "Growth", "Community", "Humour", "Balance"];
 const STAGES: JourneyStage[] = ["Matchmaking", "Verified", "Onboarding", "Follow-up", "Meeting Scheduled", "Profile Incomplete", "Introduction Sent", "On Hold", "New Lead", "Converted"];
 const MARITAL: MaritalStatus[] = ["Never married", "Never married", "Never married", "Divorced", "Widowed"];
-const CHILDREN = ["Want children", "Open to children", "Do not want children", "Has children"] as const;
 const TIMELINES = ["Within 1–2 years", "Within 2–3 years", "Open to the right person", "No fixed timeline"];
 const STRUCTURES = ["Nuclear family", "Joint family", "Close-knit extended family"];
 const LIFESTYLES = ["Vegetarian", "Mostly home-cooked", "Fitness routine", "Social weekends", "Early riser", "Non-smoker"];
+const RELIGIONS = ["Hindu", "Muslim", "Christian", "Sikh", "Jain"];
+const CASTES = ["Brahmin", "Maratha", "Nair", "Reddy", "Kayastha", "Lingayat", "Jat", "Patel", "Kamma", "Syrian Christian"];
+
+/** Six clients per matchmaker, so ownership is real data rather than a label. */
+export const MATCHMAKERS: Matchmaker[] = [
+  {
+    id: "mm-001",
+    name: "Maya Shah",
+    initials: "MS",
+    email: "maya@thedatecrew.demo",
+    passwordSalt: "tdc-demo-maya-v1",
+    passwordHash: hashPassword("DemoMatch123!", "tdc-demo-maya-v1"),
+  },
+  {
+    id: "mm-002",
+    name: "Arjun Rao",
+    initials: "AR",
+    email: "arjun@thedatecrew.demo",
+    passwordSalt: "tdc-demo-arjun-v1",
+    passwordHash: hashPassword("ArjunMatch123!", "tdc-demo-arjun-v1"),
+  },
+];
 
 function pick<T>(items: readonly T[], seed: number): T {
   return items[Math.abs(seed) % items.length];
@@ -40,6 +74,19 @@ function list<T>(items: readonly T[], seed: number, count: number): T[] {
     if (!result.includes(value)) result.push(value);
   }
   return result;
+}
+
+/** Deterministic tri-state distribution: Yes ~55%, Maybe ~25%, No ~20%. */
+function triState(seed: number, yesWeight = 55, maybeWeight = 25): TriState {
+  const bucket = Math.abs(seed) % 100;
+  if (bucket < yesWeight) return "Yes";
+  if (bucket < yesWeight + maybeWeight) return "Maybe";
+  return "No";
+}
+
+function income(seed: number): number {
+  const raw = 600_000 + ((seed * 137) % 5_400_000);
+  return Math.round(raw / 50_000) * 50_000;
 }
 
 function preferences(age: number, city: string, seed: number): PartnerPreferences {
@@ -60,8 +107,9 @@ function preferences(age: number, city: string, seed: number): PartnerPreference
     professions: seed % 3 === 0 ? list(PROFESSIONS, seed, 3) : [],
     education: seed % 4 === 0 ? list(DEGREES, seed, 2) : [],
     languages: seed % 3 === 0 ? list(LANGUAGES, seed, 2) : [],
-    childrenPreference: seed % 4 === 0 ? pick(CHILDREN, seed) : null,
-    relocation: seed % 5 === 0 ? "Not open to relocate" : seed % 3 === 0 ? "Open to relocate" : null,
+    childrenPreference: seed % 4 === 0 ? triState(seed * 31) : null,
+    relocation: seed % 5 === 0 ? triState(seed * 17, 45, 25) : null,
+    petsPreference: seed % 6 === 0 ? triState(seed * 23) : null,
     relationshipTimeline: pick(TIMELINES, seed),
     values: list(VALUES, seed, 3),
     interests: list(INTERESTS, seed, 3),
@@ -70,7 +118,8 @@ function preferences(age: number, city: string, seed: number): PartnerPreference
   };
 }
 
-function buildProfile(index: number, assigned: boolean, gender: Gender): Profile {
+function buildProfile(index: number, gender: Gender, owner: Matchmaker | null): Profile {
+  const assigned = owner !== null;
   const seed = assigned ? index + 5 : index + 101;
   const [city, state] = pick(LOCATIONS, seed * 3);
   const age = 25 + ((seed * 7) % 18);
@@ -109,17 +158,19 @@ function buildProfile(index: number, assigned: boolean, gender: Gender): Profile
     company: isMissing(10) ? null : pick(COMPANIES, seed * 31),
     designation: isMissing(11) ? null : pick(["Senior", "Lead", "Associate", "Principal", "Product", "Staff"], seed * 7),
     profession: isMissing(10) ? null : pick(PROFESSIONS, seed * 19),
-    incomeBand: isMissing(7) ? null : pick(["₹10–15 LPA", "₹15–25 LPA", "₹25–40 LPA", "₹40–60 LPA", "Prefer not to say"], seed * 37),
+    annualIncomeInr: isMissing(7) ? null : income(seed),
     siblings: isMissing(13) ? null : seed % 4,
     familyStructure: isMissing(9) ? null : pick(STRUCTURES, seed * 3),
-    religion: seed % 4 === 0 ? pick(["Hindu", "Muslim", "Christian", "Sikh", "Jain"], seed * 41) : null,
-    community: seed % 10 === 0 ? pick(["Not specified", "Community A", "Community B"], seed) : null,
+    // Religion and caste are optional and only ever explicitly recorded. They
+    // are never inferred and never used by the scorer.
+    religion: seed % 20 < 13 ? pick(RELIGIONS, seed * 41) : null,
+    caste: seed % 20 < 12 ? pick(CASTES, seed * 43) : null,
     motherTongue: isMissing(15) ? null : pick(LANGUAGES, seed * 43),
     familyLocation: isMissing(14) ? null : pick(LOCATIONS.map(([name]) => name), seed * 47),
     familyValues: isMissing(12) ? null : pick(["Progressive", "Balanced", "Traditional", "Prefer to discuss"], seed * 53),
-    childrenPreference: isMissing(12) ? null : pick(CHILDREN, seed * 59),
-    relocation: isMissing(8) ? null : seed % 2 === 0 ? "Open to relocate" : "Not open to relocate",
-    petsPreference: isMissing(10) ? null : pick(["Loves pets", "Open to pets", "No pets"], seed * 61),
+    childrenPreference: isMissing(12) ? null : triState(seed * 59, 45, 25),
+    relocation: isMissing(8) ? null : triState(seed * 61),
+    petsPreference: isMissing(10) ? null : triState(seed * 67),
     smokingPreference: isMissing(5) ? null : pick(["Does not smoke", "Prefer to discuss", "Occasionally"], seed * 83),
     drinkingPreference: isMissing(6) ? null : pick(["Does not drink", "Socially", "Prefer to discuss"], seed * 89),
     lifestyle: list(LIFESTYLES, seed * 67, 2 + (seed % 3)),
@@ -131,7 +182,7 @@ function buildProfile(index: number, assigned: boolean, gender: Gender): Profile
     consent: "Consented to demo",
     stage,
     preferences: preferences(age, city, seed),
-    assigned,
+    assignedMatchmakerId: owner?.id ?? null,
     profileCompleteness: completeness,
     lastActivityAt: new Date(Date.UTC(2026, 8, 29 - (seed % 27), 9 + (seed % 9))).toISOString(),
     prompt: seed % 3 === 0 ? `A small thing that makes my week: ${pick(INTERESTS, seed * 79).toLowerCase()}.` : null,
@@ -149,9 +200,20 @@ function event(id: string, profileId: string, type: ActivityEvent["type"], descr
   };
 }
 
+/**
+ * Build the reproducible demo dataset.
+ *
+ * 12 assigned customers (6 per matchmaker) and 200 candidates split 100/100 by
+ * gender, so every customer has at least 100 opposite-gender profiles to rank
+ * even after strict filters and previously-contacted exclusions.
+ */
 export function createSeedStore(): DemoStore {
-  const clients = Array.from({ length: 12 }, (_, index) => buildProfile(index, true, index % 2 === 0 ? "man" : "woman"));
-  const candidates = Array.from({ length: 120 }, (_, index) => buildProfile(index, false, index % 2 === 0 ? "woman" : "man"));
+  const clients = Array.from({ length: 12 }, (_, index) =>
+    buildProfile(index, index % 2 === 0 ? "man" : "woman", MATCHMAKERS[index % MATCHMAKERS.length]),
+  );
+  const candidates = Array.from({ length: 200 }, (_, index) =>
+    buildProfile(index, index % 2 === 0 ? "woman" : "man", null),
+  );
   const referenceCustomer = clients[0];
   const lowFitExample = candidates[118];
   const differentValues = VALUES.filter((value) => !referenceCustomer.values.includes(value));
@@ -163,9 +225,9 @@ export function createSeedStore(): DemoStore {
   lowFitExample.languages = LANGUAGES.filter((language) => !referenceCustomer.languages.includes(language)).slice(0, 2);
   lowFitExample.values = differentValues.slice(0, 2);
   lowFitExample.hobbies = differentInterests.slice(0, 3);
-  lowFitExample.childrenPreference = "Do not want children";
+  lowFitExample.childrenPreference = "No";
   lowFitExample.familyValues = "Traditional";
-  lowFitExample.relocation = "Not open to relocate";
+  lowFitExample.relocation = "No";
   lowFitExample.verification = "Unverified";
   lowFitExample.preferences = {
     ...lowFitExample.preferences,
@@ -174,7 +236,7 @@ export function createSeedStore(): DemoStore {
     cities: ["Delhi"],
     professions: PROFESSIONS.filter((profession) => profession !== referenceCustomer.profession).slice(0, 2),
     languages: LANGUAGES.filter((language) => !referenceCustomer.languages.includes(language)).slice(0, 2),
-    childrenPreference: "Want children",
+    childrenPreference: "Yes",
     values: differentValues.slice(2, 5),
     interests: differentInterests.slice(3, 6),
     strict: [],
@@ -197,7 +259,7 @@ export function createSeedStore(): DemoStore {
       id: `seed-introduction-${index + 1}`,
       customerId: client.id,
       candidateId: candidate.id,
-      recipient: `matchmaker@thedatecrew.demo`,
+      recipient: client.assignedMatchmakerId === MATCHMAKERS[1].id ? MATCHMAKERS[1].email : MATCHMAKERS[0].email,
       introText: `I’d love to introduce ${client.firstName} and ${candidate.firstName}. You both value thoughtful conversation and are exploring a long-term partnership.`,
       status: "Sent (Demo)" as const,
       createdAt: interaction.updatedAt,
@@ -206,7 +268,7 @@ export function createSeedStore(): DemoStore {
   const notes = [
     { id: "seed-note-1", profileId: clients[0].id, author: "Maya Shah", type: "Call" as const, text: "Enjoyed our conversation. Looking for someone curious, kind, and open to building a life in Bengaluru.", createdAt: "2026-10-12T10:00:00.000Z" },
     { id: "seed-note-2", profileId: clients[2].id, author: "Maya Shah", type: "Meeting" as const, text: "Reviewed profile together. They would like introductions to feel intentional and low-pressure.", createdAt: "2026-10-10T11:30:00.000Z" },
-    { id: "seed-note-3", profileId: clients[4].id, author: "Maya Shah", type: "Follow-up" as const, text: "Asked us to prioritize shared values and communication style over a narrow city preference.", createdAt: "2026-10-09T09:15:00.000Z" },
+    { id: "seed-note-3", profileId: clients[8].id, author: "Arjun Rao", type: "Follow-up" as const, text: "Asked us to prioritize shared values and communication style over a narrow city preference.", createdAt: "2026-10-09T09:15:00.000Z" },
   ];
   const activities: ActivityEvent[] = [
     event("seed-event-1", clients[0].id, "stage", "Profile moved to Matchmaking", 0),
@@ -217,5 +279,5 @@ export function createSeedStore(): DemoStore {
     event("seed-event-6", clients[3].id, "stage", "Profile moved to Meeting Scheduled", 5),
     event("seed-event-7", clients[5].id, "introduction", "A demo introduction was sent", 6, candidates[7].id),
   ];
-  return { profiles, interactions, notes, activities, introductions };
+  return { matchmakers: MATCHMAKERS, profiles, interactions, notes, activities, introductions };
 }
