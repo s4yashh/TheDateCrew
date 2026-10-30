@@ -21,18 +21,18 @@ afterEach(async () => {
 describe("file repository", () => {
   it("returns null before the first write", async () => {
     const repository = createFileRepository(await temporaryDirectory());
-    expect(await repository.read()).toBeNull();
+    expect(await repository.readVersioned()).toBeNull();
   });
 
   it("resets, reads, and rewrites the snapshot", async () => {
     const repository = createFileRepository(await temporaryDirectory());
     const seeded = await repository.reset();
     expect(seeded.profiles).toHaveLength(212);
-    expect((await repository.read())?.profiles).toHaveLength(212);
+    expect((await repository.readVersioned())?.store.profiles).toHaveLength(212);
 
     seeded.notes.push({ id: "test-note", profileId: seeded.profiles[0].id, author: "Test", type: "General", text: "Persisted", createdAt: new Date().toISOString() });
-    await repository.write(seeded);
-    expect((await repository.read())?.notes.some((note) => note.id === "test-note")).toBe(true);
+    expect(await repository.write(seeded, 0)).toBe(true);
+    expect((await repository.readVersioned())?.store.notes.some((note) => note.id === "test-note")).toBe(true);
   });
 
   it("includes the configured directory in its description", async () => {
