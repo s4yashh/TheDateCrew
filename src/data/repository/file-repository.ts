@@ -7,7 +7,13 @@ import type { StoreRepository } from "@/data/repository/types";
 const STORE_FILENAME = "demo-store.json";
 const TEMP_FILENAME = "demo-store.tmp";
 
-/** Local development fallback used whenever DATABASE_URL is absent. */
+/**
+ * Local development fallback used whenever DATABASE_URL is absent.
+ *
+ * The in-process promise queue in `store.ts` serialises writes. There is no
+ * cross-process locking: this adapter is for one local dev server, not a
+ * multi-instance deployment.
+ */
 export function createFileRepository(dataDirectory = process.env.DATA_DIR || join(process.cwd(), ".data")): StoreRepository {
   // The file adapter is a local-development fallback. Tell Turbopack not to
   // trace the whole project for this dynamic path.
@@ -24,15 +30,19 @@ export function createFileRepository(dataDirectory = process.env.DATA_DIR || joi
   }
 
   return {
-    async read() {
+    async readVersioned() {
       try {
-        return JSON.parse(await readFile(storePath, "utf8")) as DemoStore;
+        return { store: JSON.parse(await readFile(storePath, "utf8")) as DemoStore, version: 0 };
       } catch (error) {
         if (error instanceof Error && "code" in error && error.code === "ENOENT") return null;
         throw error;
       }
     },
-    write,
+    async write(store: DemoStore) {
+      await write(store);
+      // The file adapter has no cross-process version to compare.
+      return true;
+    },
     async reset() {
       const seeded = createSeedStore();
       await write(seeded);
