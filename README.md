@@ -88,8 +88,10 @@ npm run start      # serve the production build
 5. Run `npm run seed` locally with the same `DATABASE_URL` if you want to reset
    the deployed snapshot.
 
-No paid plan is required. The store is a single `jsonb` row, so it is
-last-write-wins across serverless instances; see `docs/architecture.md`.
+No paid plan is required. The store is a single `jsonb` row with optimistic
+concurrency: writes compare a row version and retry on a conflict, so two
+serverless instances cannot silently overwrite each other. See
+`docs/architecture.md`.
 
 ## Matching in one paragraph
 
@@ -116,6 +118,8 @@ decision support for a human matchmaker, not predictions.
 
 - Demo authentication: two shared fictional accounts, no account management.
 - One `jsonb` snapshot, not a normalised schema; no per-entity transactions.
+  Writes use compare-and-swap with a small retry budget, so sustained
+  contention can still surface a "please retry" message.
 - Gemini free-tier content may be used by Google to improve their products; all
   submitted data is synthetic.
 - No real email transport. "Send" writes a `Sent (Demo)` record and activity

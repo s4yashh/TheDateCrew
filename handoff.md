@@ -37,8 +37,9 @@ The workspace is a working Next.js 16 App Router application with:
 - **Numeric income.** Annual INR figures replaced band strings, so relative
   income comparisons are exact and the UI can format LPA consistently.
 - **One `jsonb` row, not Prisma.** Fastest free path to durable storage on
-  Vercel. The repository contract is deliberately small so normalised tables can
-  replace it later.
+  Vercel. Writes use compare-and-swap with a retry, so concurrent instances
+  cannot silently overwrite each other. The repository contract is
+  deliberately small so normalised tables can replace it later.
 - **Server-side ownership.** Every route scopes reads and writes by
   `assignedMatchmakerId`; the client never filters for security.
 
@@ -63,11 +64,15 @@ npm run ai:smoke   # requires GEMINI_API_KEY
 
 ## Verification
 
-- `npm test`: **125 tests passing across 13 files**.
+- `npm test`: **128 tests passing across 14 files**.
 - `npm run lint`: pass.
 - `npm run typecheck`: pass.
 - `npm run build`: pass on Next.js 16.4.3 (the 16.4.0 security advisory is
   resolved).
+- The compare-and-swap DDL and SQL (`CREATE TABLE`, `ALTER TABLE ... ADD COLUMN
+  IF NOT EXISTS`, versioned `UPDATE ... RETURNING`, conflicting `INSERT`) were
+  executed against a real local PostgreSQL 15 instance: a stale version updated
+  0 rows and a concurrent insert inserted 0 rows, as intended.
 - Live smoke test on a production build:
   - both demo logins succeed and return the correct matchmaker;
   - Maya sees 6 customers + 200 candidates, Arjun sees 6 + 200;
@@ -82,9 +87,9 @@ npm run ai:smoke   # requires GEMINI_API_KEY
 
 - The Neon adapter has **not** been integration-tested against a live database
   because `DATABASE_URL` was not available in this session. It compiles, the
-  file adapter is fully tested, and the SQL is limited to create/select/upsert.
-  Run `npm run seed` with `DATABASE_URL` set and exercise a note + send before
-  trusting the deployment.
+  retry logic is unit-tested with a simulated conflict, and the exact DDL/CAS SQL
+  was executed against local PostgreSQL 15. Run `npm run seed` with
+  `DATABASE_URL` set and exercise a note + send before trusting the deployment.
 - No Vercel deployment has been performed. The repository is ready to import;
   see the README for the exact environment variables.
 - No browser walkthrough was performed in this session (the browser pane was

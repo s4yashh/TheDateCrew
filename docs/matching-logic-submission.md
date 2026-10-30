@@ -40,7 +40,8 @@ assumptions, not evidence-based claims, so they are capped, labelled, explained
 per match, and can be switched off. Assumptions in this submission are the
 fictional 12-customer / 200-candidate pool, the demo-only opposite-gender rule,
 two shared demo accounts, and a single-row Neon `jsonb` snapshot with
-last-write-wins semantics across serverless instances. Demo credentials, data,
+compare-and-swap writes and a bounded retry budget; sustained contention can
+surface a retry prompt rather than losing data. Demo credentials, data,
 and mock email are not production security or delivery infrastructure. Religion,
 caste, and family identity are optional, explicitly recorded, never inferred, and
 excluded from the score.

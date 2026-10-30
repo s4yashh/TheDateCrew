@@ -43,16 +43,20 @@
 The repository contract is deliberately small:
 
 ```ts
-read(): Promise<DemoStore | null>
-write(store: DemoStore): Promise<void>
+readVersioned(): Promise<{ store: DemoStore; version: number } | null>
+write(store: DemoStore, expectedVersion: number): Promise<boolean>
 reset(): Promise<DemoStore>
 ```
 
 - **Neon Postgres (production):** the whole snapshot lives in one `jsonb` row in
-  `demo_store`. Reads select that row; writes use
-  `INSERT ... ON CONFLICT (id) DO UPDATE`. The table is created lazily on first
-  use, so `next build` never touches the database and a fresh project needs no
-  migration step.
+  `demo_store`. Reads select the row and its `version`; writes are
+  compare-and-swap (`UPDATE ... WHERE version = expected RETURNING version`).
+  A losing writer gets `false`, and `updateStore` re-reads and replays the
+  mutation, up to three attempts. Two serverless instances therefore cannot
+  silently overwrite each other. The table is created lazily on first use, so
+  `next build` never touches the database and a fresh project needs no migration
+  step; an `ALTER TABLE ... ADD COLUMN IF NOT EXISTS version` keeps an
+  already-deployed table compatible.
 - **Local file (development):** an atomic temp-write + rename, mode `0600`, in
   `.data/` by default or `DATA_DIR` when set.
 - **Selection:** `DATABASE_URL` present selects Postgres; otherwise the file
@@ -67,11 +71,16 @@ allows a clearly documented demo mode with a repository abstraction. A single
 durable on Vercel's ephemeral filesystem, with one new dependency and no
 migration pipeline.
 
+A `version` column makes writes compare-and-swap. If two instances read the same
+version, only one `UPDATE ... WHERE version = expected` succeeds; the loser
+re-reads and replays the mutation (up to three attempts). This closes the
+last-write-wins hole that a naive upsert would leave on Vercel.
+
 The trade-offs are explicit:
 
-- Across serverless instances the snapshot is **last-write-wins**. Two
-  simultaneous writes from different instances can overwrite each other. The
-  in-process queue prevents that only within one instance.
+- Sustained contention can exhaust the three-attempt budget; the user sees a
+  "workspace was updated elsewhere, please retry" message rather than silent
+  data loss.
 - There are no per-entity indexes, foreign keys, or row-level transactions.
 - A production system would normalise `Profile`, `PartnerPreferences`,
   `MatchInteraction`, `MatchNote`, `ActivityEvent`, `Introduction`, and
